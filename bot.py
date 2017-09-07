@@ -9,6 +9,7 @@ pattern = re.compile(r'\b[V|v][O|o][R|r][E|e]\b')
 serverAndDate = {}
 botStartup = datetime.datetime.now()
 
+
 client = discord.Client()
 
 @client.event
@@ -22,10 +23,19 @@ async def on_ready():
 async def on_message(message):
     global botStartup
     currentTime = datetime.datetime.now()
-    lastReferenced = client.user.joined_at
+    
+    bot = None
+    for x in message.server.members:
+        if client.user.id == x.id:
+            bot = x
+            break
+
+    lastReferenced = bot.joined_at - datetime.timedelta(hours=4)
     if message.server in serverAndDate:
         lastReferenced = serverAndDate[message.server]
 
+    print(lastReferenced)
+    print(currentTime)
     diff = currentTime - lastReferenced
     hours = math.floor(diff.seconds/3600)
     seconds = diff.seconds - hours * 3600
