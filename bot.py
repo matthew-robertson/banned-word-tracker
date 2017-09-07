@@ -22,11 +22,11 @@ async def on_ready():
 async def on_message(message):
     global botStartup
     currentTime = datetime.datetime.now()
-    lastReferenced = botStartup
+    lastReferenced = client.user.joined_at
     if message.server in serverAndDate:
         lastReferenced = serverAndDate[message.server]
 
-    diff = datetime.datetime.now() - lastReferenced
+    diff = currentTime - lastReferenced
     hours = math.floor(diff.seconds/3600)
     seconds = diff.seconds - hours * 3600
 
