@@ -1,0 +1,5 @@
+discord.py
+aiohttp
+websockets
+chardet
+asyncio
