@@ -29,8 +29,8 @@ async def on_message(message):
         if client.user.id == x.id:
             bot = x
             break
-
-    lastReferenced = bot.joined_at - datetime.timedelta(hours=4)
+    # Timezone hack, apparently isn't needed for Heroku.
+    lastReferenced = bot.joined_at #- datetime.timedelta(hours=4)
     if message.server in serverAndDate:
         lastReferenced = serverAndDate[message.server]
 
