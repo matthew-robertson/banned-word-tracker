@@ -46,7 +46,7 @@ async def on_message(message):
         await client.send_message(message.channel, 'The server has gone {} days, {} hours, {} minutes, and {} seconds without mentioning vore (aside from these messages).'.format(diff.days, hours, minutes, seconds))
     elif pattern.search(message.content) is not None and message.author.id is not client.user.id:
         serverAndDate[message.server] = currentTime
-        if ((currentTime - lastMention).seconds >= 900):
+        if ((currentTime - lastMention).total_seconds() >= 900):
             await client.send_message(message.channel, '{} referenced vore, setting the counter back to 0.\n The server went {} days, {} hours, {} minutes, and {} seconds without mentioning vore.'.format(message.author.mention, diff.days, hours, minutes, seconds))
             lastMention = currentTime
 
