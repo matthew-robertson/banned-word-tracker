@@ -8,6 +8,7 @@ import math
 pattern = re.compile(r'\b[V|v][O|o][R|r][E|e]\b')
 serverAndDate = {}
 botStartup = datetime.datetime.now()
+lastMention = datetime.datetime.now() - datetime.timedelta(days=1)
 
 
 client = discord.Client()
@@ -38,14 +39,15 @@ async def on_message(message):
     print(currentTime)
     diff = currentTime - lastReferenced
     hours = math.floor(diff.seconds/3600)
-    seconds = diff.seconds - hours * 3600
+    minutes = math.floor((diff.seconds - hours * 3600)/60)
+    seconds = diff.seconds - hours * 3600 - minutes * 60
 
     if message.content.startswith('!vt'):
-        tmp = await client.send_message(message.channel, 'Calculating messages...')
-        await client.edit_message(tmp, 'The server has gone {} days, {} hours, and {} seconds without mentioning vore (aside from these messages).'.format(diff.days, hours, seconds))
+        await client.send_message('The server has gone {} days, {} hours, {} minutes, and {} seconds without mentioning vore (aside from these messages).'.format(diff.days, hours, minutes, seconds))
     elif pattern.search(message.content) is not None and message.author.id is not client.user.id:
-        tmp = await client.send_message(message.channel, 'Calculating messages...')
         serverAndDate[message.server] = currentTime
-        await client.edit_message(tmp, '{} referenced vore, setting the counter back to 0.\n The server went {} days, {} hours, and {} seconds without mentioning vore.'.format(message.author.mention, diff.days, hours, seconds))
+        if ((currentTime - lastMention).seconds >= 900):
+            await client.send_message('{} referenced vore, setting the counter back to 0.\n The server went {} days, {} hours, {} minutes, and {} seconds without mentioning vore.'.format(message.author.mention, diff.days, hours, minutes, seconds))
+            lastMention = currentTime
 
 client.run('MzU1MTQ0NDUwNDM3MDIxNjk3.DJIlnQ.Yg56nQ6JdLbxUDmlkFnuu6ay2FM')
