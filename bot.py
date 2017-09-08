@@ -41,13 +41,32 @@ async def on_message(message):
     hours = math.floor(diff.seconds/3600)
     minutes = math.floor((diff.seconds - hours * 3600)/60)
     seconds = diff.seconds - hours * 3600 - minutes * 60
+    dt = "{} days, ".format(diff.days)
+    ht = "{} hours, ".format(hours)
+    mt = "{} minutes, and ".format(minutes)
+    st = "{} seconds".format(seconds)
+
+    if hours == 1:
+        ht = "1 hour, "
+    if minutes == 1:
+        mt = "1 minute, and "
+    if seconds == 1:
+        st = "1 second"
+    if diff.days == 1:
+        dt = "1 day, "
+    elif diff.days == 0:
+        dt = ""
+        if hours == 0:
+            ht = ""
+            if minutes == 0:
+                mt = ""
 
     if message.content.startswith('!vt'):
-        await client.send_message(message.channel, 'The server has gone {} days, {} hours, {} minutes, and {} seconds without mentioning vore (aside from these messages).'.format(diff.days, hours, minutes, seconds))
+        await client.send_message(message.channel, 'The server has gone {} {} {} {} without mentioning vore (aside from these messages).'.format(dt, ht, mt, st))
     elif pattern.search(message.content) is not None and message.author.id is not client.user.id:
         serverAndDate[message.server] = currentTime
         if ((currentTime - lastMention).total_seconds() >= 900):
-            await client.send_message(message.channel, '{} referenced vore, setting the counter back to 0.\n The server went {} days, {} hours, {} minutes, and {} seconds without mentioning vore.'.format(message.author.mention, diff.days, hours, minutes, seconds))
+            await client.send_message(message.channel, '{} referenced vore, setting the counter back to 0.\n The server went {} {} {} {} without mentioning vore.'.format(message.author.mention, dt, ht, mt, st))
             lastMention = currentTime
 
 client.run('MzU1MTQ0NDUwNDM3MDIxNjk3.DJIlnQ.Yg56nQ6JdLbxUDmlkFnuu6ay2FM')
