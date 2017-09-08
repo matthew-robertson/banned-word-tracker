@@ -62,11 +62,11 @@ async def on_message(message):
                 mt = ""
 
     if message.content.startswith('!vt'):
-        await client.send_message(message.channel, 'The server has gone {} {} {} {} without mentioning vore (aside from these messages).'.format(dt, ht, mt, st))
+        await client.send_message(message.channel, 'The server has gone {}{}{}{} without mentioning vore (aside from these messages).'.format(dt, ht, mt, st))
     elif pattern.search(message.content) is not None and message.author.id is not client.user.id:
         serverAndDate[message.server] = currentTime
-        if ((currentTime - lastMention).total_seconds() >= 900):
-            await client.send_message(message.channel, '{} referenced vore, setting the counter back to 0.\n The server went {} {} {} {} without mentioning vore.'.format(message.author.mention, dt, ht, mt, st))
-            lastMention = currentTime
+        #if ((currentTime - lastMention).total_seconds() >= 900):
+        await client.send_message(message.channel, '{} referenced vore, setting the counter back to 0.\n The server went {}{}{}{} without mentioning vore.'.format(message.author.mention, dt, ht, mt, st))
+        lastMention = currentTime
 
 client.run('MzU1MTQ0NDUwNDM3MDIxNjk3.DJIlnQ.Yg56nQ6JdLbxUDmlkFnuu6ay2FM')
