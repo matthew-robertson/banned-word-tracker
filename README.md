@@ -5,5 +5,5 @@ The bot can be added to your server [here](https://discordapp.com/oauth2/authori
 
 The bot provides one command: "!vt" which will tell you how long the server has gone without mentioning the word "vore."
 
-The bot also monitors all messages for a message like "vore" (specifically, case-insensitive, ensuring there are word-breaks on either side of the phrase), and will reset the server's counter if it finds a message containing a match after calling out the user publically.
+The bot also monitors all messages for a message like "vore" (specifically, case-insensitive, accent-insensitive, ensuring there are word-breaks on either side of the phrase), and will reset the server's counter if it finds a message containing a match after calling out the user publically.
 

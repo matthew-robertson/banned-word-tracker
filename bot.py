@@ -83,7 +83,7 @@ async def on_message(message):
         ht = "1 hour, "
     if minutes == 1:
         if ht == "":
-            mt = "1 minute and"
+            mt = "1 minute and "
         else:
             mt = "1 minute, and "
     if seconds == 1:
