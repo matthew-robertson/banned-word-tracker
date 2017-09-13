@@ -45,14 +45,17 @@ async def on_message(message):
     global serverAndDate
     currentTime = datetime.datetime.now()
     
-    bot = None
-    for x in message.server.members:
-        if client.user.id == x.id:
-            bot = x
-            break
+    ''' I'm just using startup time instead of join date, because that makes way more sense for older
+        servers if the filesystem stuff doesn't work
+    '''
+    #bot = None
+    #for x in message.server.members:
+    #    if client.user.id == x.id:
+    #        bot = x
+    #        break
 
     # Timezone hack, apparently isn't needed for Heroku.
-    lastReferenced = bot.joined_at #- datetime.timedelta(hours=4)
+    lastReferenced = botStartup
     if message.server.id in serverAndDate:
         lastReferenced = serverAndDate[message.server.id]
 
