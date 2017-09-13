@@ -97,4 +97,4 @@ async def on_message(message):
         await client.send_message(message.channel, '{} referenced vore, setting the counter back to 0.\n The server went {}{}{}{} without mentioning vore.'.format(message.author.mention, dt, ht, mt, st))
         lastMention = currentTime
 
-client.run('MzU1MTQ0NDUwNDM3MDIxNjk3.DJIlnQ.Yg56nQ6JdLbxUDmlkFnuu6ay2FM)
+client.run('MzU1MTQ0NDUwNDM3MDIxNjk3.DJIlnQ.Yg56nQ6JdLbxUDmlkFnuu6ay2FM')
