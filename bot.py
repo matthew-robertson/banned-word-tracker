@@ -8,7 +8,7 @@ import math
 pattern = re.compile(r'\b[V|v][O|Ò|Ó|Ô|Õ|Ö|o|ò|ó|ô|õ|ö][R|r][E|È|É|Ê|Ë|e|è|é|ê|ë][S|s]?\b')
 serverAndDate = {}
 botStartup = datetime.datetime.now()
-lastMention = datetime.datetime.now() - datetime.timedelta(days=1)
+lastMention = {}
 awake = True
 
 client = discord.Client()
@@ -36,8 +36,10 @@ async def on_ready():
     print('------')
     readTimesFromFile()
     print('Stored server info:')
+    count = 0
     for id in serverAndDate:
-        print ("id: {}, time: {}".format(id, serverAndDate[id]))
+        print ("{}: id: {}, time: {}".format(count, id, serverAndDate[id]))
+        count = count + 1
 
 @client.event
 async def on_message(message):
@@ -46,6 +48,7 @@ async def on_message(message):
     global lastMention
     global awake
     currentTime = datetime.datetime.now()
+    serverId = message.server.id
     
     ''' I'm just using startup time instead of join date, because that makes way more sense for older
         servers if the filesystem stuff doesn't work
@@ -58,8 +61,10 @@ async def on_message(message):
 
     # Timezone hack, apparently isn't needed for Heroku.
     lastReferenced = botStartup
-    if message.server.id in serverAndDate:
-        lastReferenced = serverAndDate[message.server.id]
+    if serverId in serverAndDate:
+        lastReferenced = serverAndDate[serverId]
+    if serverId not in lastMention:
+        lastMention[serverId] = currentTime
 
     # Begin time formatting
     diff = currentTime - lastReferenced
@@ -105,11 +110,11 @@ async def on_message(message):
     elif message.content.startswith('!vt'):
         await client.send_message(message.channel, 'The server has gone {}{}{}{} without mentioning the forbidden word.'.format(dt, ht, mt, st))
     elif ((pattern.search(message.content) is not None) and (message.author.id != client.user.id)):
-        serverAndDate[message.server.id] = currentTime
+        serverAndDate[serverId] = currentTime
         writeTimesToFile()
-        print((currentTime - lastMention).total_seconds())
-        if (awake and (currentTime - lastMention).total_seconds() >= 1800):
+        print ("server id: {} went {} seconds.".format(serverId, (currentTime - lastMention[serverId]).total_seconds()))
+        if (awake and (currentTime - lastMention[serverId]).total_seconds() >= 1800):
             await client.send_message(message.channel, '{} referenced the forbidden word, setting the counter back to 0. I\'ll wait a half hour before warning you again.\n The server went {}{}{}{} without mentioning it.'.format(message.author.mention, dt, ht, mt, st))
-            lastMention = currentTime
+            lastMention[serverId] = currentTime
 
 client.run('-----YOURKEYHERE------')
