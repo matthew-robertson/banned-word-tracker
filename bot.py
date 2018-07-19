@@ -108,21 +108,23 @@ async def on_message(message):
         st = "1 second"
     # End Time formatting stuff
 
-    permission = message.author.server_permissions
-
-    if message.content.startswith('!vtsilence') and permission.administrator:
-        await client.send_message(message.channel, "Ok {}, I'll be quiet now. use '!vtalert' to wake me back up!".format(message.author.mention))
-        awake[serverId] = False
-        writeTimesToFile()
-    elif message.content.startswith('!vtalert') and permission.administrator:
-        await client.send_message(message.channel, "Ok {}, I'm scanning now.".format(message.author.mention))
-        awake[serverId] = True
-        writeTimesToFile()
+    if (hasattr(message.author, 'server_permissions')):
+        permission = message.author.server_permissions
+        if message.content.startswith('!vtsilence') and permission.administrator:
+            await client.send_message(message.channel, "Ok {}, I'll be quiet now. use '!vtalert' to wake me back up!".format(message.author.mention))
+            awake[serverId] = False
+            writeTimesToFile()
+        elif message.content.startswith('!vtalert') and permission.administrator:
+            await client.send_message(message.channel, "Ok {}, I'm scanning now.".format(message.author.mention))
+            awake[serverId] = True
+            writeTimesToFile()
+    if message.content.startswith('!vtsilence') or message.content.startswith('!vtalert'):
+        pass
     elif message.content.startswith('!vthelp'):
         await client.send_message(message.channel, "You can ask me how long we've made it with '!vt'.\n If you're an admin you can silence me with '!vtsilence' and wake me back up with '!vtalert'")
     elif message.content.startswith('!vt'):
         await client.send_message(message.channel, 'The server has gone {}{}{}{} without mentioning the forbidden word.'.format(dt, ht, mt, st))
-    elif ((pattern.search(message.content) is not None) and (message.author.id != client.user.id)):
+    if ((pattern.search(message.content) is not None) and (message.author.id != client.user.id)):
         serverAndDate[serverId] = currentTime
         writeTimesToFile()
         print ("server id: {} went {} seconds.".format(serverId, (currentTime - lastMention[serverId]).total_seconds()))
@@ -130,4 +132,4 @@ async def on_message(message):
             await client.send_message(message.channel, '{} referenced the forbidden word, setting the counter back to 0. I\'ll wait a half hour before warning you again.\n The server went {}{}{}{} without mentioning it.'.format(message.author.mention, dt, ht, mt, st))
             lastMention[serverId] = currentTime
 
-client.run('-----YOURKEYHERE------')
+client.run('-----YOURKEYHERE-----')
