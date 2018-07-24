@@ -132,4 +132,6 @@ async def on_message(message):
             await client.send_message(message.channel, '{} referenced the forbidden word, setting the counter back to 0. I\'ll wait a half hour before warning you again.\n The server went {}{}{}{} without mentioning it.'.format(message.author.mention, dt, ht, mt, st))
             lastMention[serverId] = currentTime
 
-client.run('-----YOURKEYHERE-----')
+with open("key.txt", "r") as target:
+        for line in target:
+            client.run(line)
