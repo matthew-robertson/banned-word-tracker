@@ -127,7 +127,7 @@ async def on_message(message):
     if ((pattern.search(message.content) is not None) and (message.author.id != client.user.id)):
         serverAndDate[serverId] = currentTime
         writeTimesToFile()
-        print ("server id: {} went {} seconds.".format(serverId, (currentTime - lastMention[serverId]).total_seconds()))
+        print ("{}::: {} lasted {} seconds.".format(currentTime, serverId, (currentTime - lastMention[serverId]).total_seconds()))
         if (awake[serverId] and (currentTime - lastMention[serverId]).total_seconds() >= 1800):
             await client.send_message(message.channel, '{} referenced the forbidden word, setting the counter back to 0. I\'ll wait a half hour before warning you again.\n The server went {}{}{}{} without mentioning it.'.format(message.author.mention, dt, ht, mt, st))
             lastMention[serverId] = currentTime
