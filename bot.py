@@ -38,12 +38,6 @@ async def on_ready():
     print(client.user.name)
     print(client.user.id)
     print('------')
-    readTimesFromFile()
-    print('Stored server info:')
-    count = 0
-    for id in serverAndDate:
-        print ("{}: id: {}, time: {}".format(count, id, serverAndDate[id]))
-        count = count + 1
 
 @client.event
 async def on_message(message):
@@ -131,6 +125,14 @@ async def on_message(message):
         if (awake[serverId] and (currentTime - lastMention[serverId]).total_seconds() >= 1800):
             await client.send_message(message.channel, '{} referenced the forbidden word, setting the counter back to 0. I\'ll wait a half hour before warning you again.\n The server went {}{}{}{} without mentioning it.'.format(message.author.mention, dt, ht, mt, st))
             lastMention[serverId] = currentTime
+
+
+readTimesFromFile()
+print('Stored server info:')
+count = 0
+for id in serverAndDate:
+    print ("{}: id: {}, time: {}".format(count, id, serverAndDate[id]))
+    count = count + 1
 
 with open("key.txt", "r") as target:
         for line in target:
