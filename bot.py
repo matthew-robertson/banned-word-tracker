@@ -199,7 +199,6 @@ for id in serverAndDate:
     print ("{}: id: {}, time: {}".format(count, id, serverAndDate[id]))
     count = count + 1
 
-<<<<<<< HEAD
 while True:
     try:
         with open("key.txt", "r") as target:
@@ -207,8 +206,3 @@ while True:
                  client.loop.run_until_complete(client.start(line))
     except BaseException:
             time.sleep(5)
-=======
-with open("key.txt", "r") as target:
-        for line in target:
-            client.run(line)
->>>>>>> 80860936de03612dfde5f76ddb5b2e2b3c2da35d
