@@ -134,6 +134,10 @@ for id in serverAndDate:
     print ("{}: id: {}, time: {}".format(count, id, serverAndDate[id]))
     count = count + 1
 
-with open("key.txt", "r") as target:
-        for line in target:
-            client.run(line)
+while True:
+    try:
+        with open("key.txt", "r") as target:
+            for line in target:
+                 client.loop.run_until_complete(client.start(line))
+    except BaseException:
+            time.sleep(5)
