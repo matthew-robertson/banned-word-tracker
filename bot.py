@@ -5,7 +5,7 @@ import datetime
 import math
 
 # A pattern to match the word vore, and only the single word vore.
-pattern = re.compile(r'\b[\*|_|~|`|-|\.]*[V|v][\*|_|~|`|-|\.]*[O|Ò|Ó|Ô|Õ|Ö|o|ò|ó|ô|õ|ö][\*|_|~|`|-|\.]*[R|r][\*|_|~|`|-|\.]*[E|È|É|Ê|Ë|Е|e|è|é|ê|ë|е][\*|_|~|`|-|\.]*[S|s]?\b')
+pattern = re.compile(r'\b[\*|_|~|`|-|\.]*[V|v][\*|_|~|`|-|\.]*[O|Ò|Ó|Ô|Õ|Ö|o|ò|ó|ô|õ|ö|ᴑ|о][\*|_|~|`|-|\.]*[R|r][\*|_|~|`|-|\.]*[E|È|É|Ê|Ë|Е|e|è|é|ê|ë|е][\*|_|~|`|-|\.]*[S|s]?\b')
 serverAndDate = {}
 botStartup = datetime.datetime.now()
 lastMention = {}
@@ -199,6 +199,7 @@ for id in serverAndDate:
     print ("{}: id: {}, time: {}".format(count, id, serverAndDate[id]))
     count = count + 1
 
+<<<<<<< HEAD
 while True:
     try:
         with open("key.txt", "r") as target:
@@ -206,3 +207,8 @@ while True:
                  client.loop.run_until_complete(client.start(line))
     except BaseException:
             time.sleep(5)
+=======
+with open("key.txt", "r") as target:
+        for line in target:
+            client.run(line)
+>>>>>>> 80860936de03612dfde5f76ddb5b2e2b3c2da35d
