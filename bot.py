@@ -4,7 +4,7 @@ import re
 import datetime
 import math
 import time
-from dao.infractions_dao import InfractionsDao
+from dao.server_dao import ServerDao
 
 # A pattern to match the word vore, and only the single word vore.
 pattern = re.compile(r'\b[\*|_|~|`|-|\.]*[V|v][\*|_|~|`|-|\.]*[O|Ò|Ó|Ô|Õ|Ö|o|ò|ó|ô|õ|ö|ᴑ|о][\*|_|~|`|-|\.]*[R|r][\*|_|~|`|-|\.]*[E|È|É|Ê|Ë|Е|e|è|é|ê|ë|е][\*|_|~|`|-|\.]*[S|s]?\b')
@@ -14,7 +14,7 @@ lastMention = {}
 awake = {}
 
 def readTimesFromFile():
-    servers = InfractionsDao.get_all_infractions()
+    servers = ServerDao.get_all_servers()
 
     global serverAndDate
     for server in servers:
@@ -25,7 +25,7 @@ def readTimesFromFile():
 def writeTimesToFile():
     with open('timeStamps.txt', 'w') as target:
         for serverId in serverAndDate:
-            InfractionsDao.insert_infraction(serverId, serverAndDate[serverId].strftime("%Y-%m-%d %H:%M:%S"), awake[serverId])
+            ServerDao.insert_server(serverId, serverAndDate[serverId].strftime("%Y-%m-%d %H:%M:%S"), awake[serverId])
 
 clients = []
 
