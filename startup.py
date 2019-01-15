@@ -19,6 +19,8 @@ if (response.ok):
 	for x in range(0, shard_count):
 		processes.append(subprocess.Popen(['python', 'bot.py', str(x), str(shard_count)]))
 	print("Launched processes")
-	print(processes.pid)
+	with open("logs/pids.txt", "w") as target:
+		for process in processes:
+			target.write('{}\n'.format(process.pid))
 else:
 	print("Can't reach the Gateway endpoint. Giving up.")
