@@ -1,9 +1,10 @@
-import discord
 import asyncio
-import re
 import datetime
+import discord
 import math
+import re
 import time
+
 from dao.server_dao import ServerDao
 
 # A pattern to match the word vore, and only the single word vore.
@@ -23,9 +24,8 @@ def readTimesFromFile():
             
 
 def writeTimesToFile():
-    with open('timeStamps.txt', 'w') as target:
-        for serverId in serverAndDate:
-            ServerDao.insert_server(serverId, serverAndDate[serverId].strftime("%Y-%m-%d %H:%M:%S"), awake[serverId])
+    for serverId in serverAndDate:
+        ServerDao.insert_server(serverId, serverAndDate[serverId].strftime("%Y-%m-%d %H:%M:%S"), awake[serverId])
 
 clients = []
 
