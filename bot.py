@@ -109,6 +109,7 @@ def handle_message(message, botID):
 
     # Check if they've said the forbidden word
     if ((pattern.search(message.content) is not None) and (message.author.id != botID)):
+        tDiff = currentTime - currentServer['infracted_at']
         currentServer['infracted_at'] = currentTime
         
         if (currentServer['awake'] and (currentTime - currentServer['calledout_at']).total_seconds() >= 1800):
@@ -116,7 +117,7 @@ def handle_message(message, botID):
             msg_to_send = "{} referenced the forbidden word, setting the counter back to 0. I'll wait a half hour before warning you again.\n The server went {} without mentioning it.".format(message.author.mention, timeLasted)
 
         ServerDao.insert_server(currentServer)
-        print("{}::: {} lasted {} seconds.".format(currentTime, serverId, (currentTime - currentServer['infracted_at']).total_seconds()))
+        print("{}::: {} lasted {} seconds.".format(currentTime, serverId, (tDiff).total_seconds()))
 
     return msg_to_send
 
