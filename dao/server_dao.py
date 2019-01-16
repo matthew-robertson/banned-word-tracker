@@ -1,3 +1,5 @@
+import datetime
+
 from dao import conn
 
 class ServerDao:
@@ -8,9 +10,25 @@ class ServerDao:
 
     return c.fetchall()
 
-  def insert_server(server_id, infracted_at, awake):
+  def get_server(server_id):
     c = conn.cursor()
-    res = c.execute('INSERT OR REPLACE INTO `server` (server_id, infracted_at, awake) VALUES (?, ?, ?)', (server_id, infracted_at, int(awake)))
+    c.execute('SELECT * FROM `server` WHERE server_id='+str(server_id))
+
+    row = c.fetchone()
+    if row is None:
+    	return None
+
+    server = {'server_id': row[0], 
+    		'infracted_at': datetime.datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S"), 
+    		'calledout_at': datetime.datetime.strptime(row[2], "%Y-%m-%d %H:%M:%S"), 
+    		'awake': row[3]}
+    return server
+
+  def insert_server(server_row):
+    c = conn.cursor()
+    res = c.execute('INSERT OR REPLACE INTO `server` (server_id, infracted_at, calledout_at, awake) VALUES (?, ?, ?, ?)',
+    				(server_row['server_id'], server_row['infracted_at'].strftime("%Y-%m-%d %H:%M:%S"),
+    				 server_row['calledout_at'].strftime("%Y-%m-%d %H:%M:%S"), int(server_row['awake'])))
     conn.commit()
 
     return res
