@@ -1,7 +1,11 @@
 import datetime
+import sqlite3
 
+import config
 from dao.server_dao import ServerDao
 
+conn = sqlite3.connect(config.DB_LOCATION)
+server_dao = ServerDao(conn)
 
 with open("timeStamps.txt", "r") as target:
     for line in target:
@@ -17,4 +21,4 @@ with open("timeStamps.txt", "r") as target:
         else:
             currentServer['awake'] = True
 
-        ServerDao.insert_server(currentServer)
+        server_dao.insert_server(currentServer)
