@@ -1,3 +1,4 @@
 key.txt
 timeStamps.txt
 *.pyc
+logs/*.txt
