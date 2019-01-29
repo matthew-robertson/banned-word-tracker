@@ -114,7 +114,7 @@ def handle_message(server_dao, message, botID):
             currentServer['calledout_at'] = currentTime
             msg_to_send = "{} referenced the forbidden word, setting the counter back to 0. I'll wait a half hour before warning you again.\n The server went {} without mentioning it.".format(message.author.mention, timeLasted)
 
-        ServerDao.insert_server(currentServer)
+        server_dao.insert_server(currentServer)
         print("{}::: {} lasted {} seconds.".format(currentTime, serverId, (tDiff).total_seconds()))
 
     return msg_to_send
