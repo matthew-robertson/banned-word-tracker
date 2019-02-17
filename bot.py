@@ -9,7 +9,7 @@ import time
 from dao.server_dao import ServerDao
 
 # A pattern to match the word vore, and only the single word vore.
-pattern = re.compile(r'\b[\*_~|`\-\.]*[Vv][\*|_|~|`|-|\.]*[OÒÓÔÕÖoòóôõöᴑо][\*_~|`\-\.]*[R|r[\*_~|`\-\.]*[EÈÉÊËЕeèéêëе][\*|_~`\-\.]*[S|s]?\b')
+pattern = re.compile(r'\b[\*_~|`\-\.]*[Vv][\*|_|~|`|-|\.]*[OÒÓÔÕÖoòóôõöᴑо][\*_~|`\-\.]*[R|r][\*_~|`\-\.]*[EÈÉÊËЕeèéêëе][\*|_~`\-\.]*[S|s]?\b')
 
 class Commands(Enum):
     NOCOMMAND = 0
