@@ -71,6 +71,8 @@ def parse_for_command(msg, msg_author):
 def handle_message(server_dao, message, botID):
     msg_to_send = False
     currentTime = datetime.datetime.now()
+    fromUTC = currentTime - datetime.datetime.utcnow()
+
     if not message.server:
         return msg_to_send
 
@@ -84,8 +86,10 @@ def handle_message(server_dao, message, botID):
             if botID == x.id:
                 bot = x
                 break
-        currentServer['infracted_at'] = bot.joined_at
-        currentServer['calledout_at'] = bot.joined_at
+
+
+        currentServer['infracted_at'] = bot.joined_at + fromUTC
+        currentServer['calledout_at'] = bot.joined_at + fromUTC - datetime.timedelta(minutes=60)
         currentServer['awake'] = True
         server_dao.insert_server(currentServer)
 
