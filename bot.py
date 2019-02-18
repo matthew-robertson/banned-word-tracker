@@ -9,9 +9,16 @@ import time
 from dao.server_dao import ServerDao
 
 # A pattern to match the word vore, and only the single word vore.
-pattern = re.compile(r'\b[\*_~|`\-\.]*[Vv][\*|_|~|`|-|\.]*[OÒÓÔÕÖoòóôõöᴑо][\*_~|`\-\.]*[R|r][\*_~|`\-\.]*[EÈÉÊËЕeèéêëе][\*|_~`\-\.]*[S|s]?\b')
+betweenStr = r'[\*_~|`\-\.]*'
+pattern = re.compile(r'\b' + betweenStr +
+                    r'[Vv]' + betweenStr +
+                    r'[OÒÓÔÕÖoòóôõöᴑо]' + betweenStr +
+                    r'[Rr]' + betweenStr +
+                    r'[EÈÉÊËЕeèéêëе]' + betweenStr +
+                    r'([Ss]|[Dd])?\b')
 
 class Commands(Enum):
+    NEEDADMIN = -1
     NOCOMMAND = 0
     VTSILENCE = 1
     VTALERT   = 2
@@ -40,11 +47,15 @@ def format_time(currentTime, lastReferenced):
 
     if hours == 1:
         ht = "1 hour, "
+    elif hours == 0:
+        ht = ""
+
     if minutes == 1:
         if ht == "":
             mt = "1 minute and "
         else:
             mt = "1 minute, and "
+
     if seconds == 1:
         st = "1 second"
 
@@ -62,11 +73,13 @@ def parse_for_command(msg, msg_author):
 
     # Check the other commands
     if msg.startswith('!vtsilence') or msg.startswith('!vtalert'):
-        pass
+        return Commands.NEEDADMIN
     elif msg.startswith('!vthelp'):
         return Commands.VTHELP
     elif msg.startswith('!vt'):
         return Commands.VT
+
+    return Commands.NOCOMMAND
 
 def handle_message(server_dao, message, botID):
     msg_to_send = False
