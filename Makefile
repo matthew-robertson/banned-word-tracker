@@ -1,5 +1,5 @@
 bot:
 	python startup.py
 
-tests:
+test:
 	python -m unittest discover

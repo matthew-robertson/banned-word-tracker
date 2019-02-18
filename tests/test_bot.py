@@ -80,3 +80,11 @@ class TestBot(unittest.TestCase):
         message_to_send = bot.handle_message(server_dao, message, 1)
 
         self.assertEqual(message_to_send, False)
+
+    def test_format_time__less_than_a_day_elapsed(self):
+        infraction_time = datetime.datetime(2019, 2, 11, 22, 7, 3)
+        last_infraction_time = datetime.datetime(2019, 2, 11, 7, 32, 21)
+
+        time = bot.format_time(infraction_time, last_infraction_time)
+
+        self.assertEqual(time, "14 hours, 34 minutes, and 42 seconds")
