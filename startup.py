@@ -14,10 +14,11 @@ if (response.ok):
 	jData = json.loads(response.content)
 	shard_count = int(jData['shards'])
 	for x in range(0, shard_count):
-		processes.append(subprocess.Popen(['python', 'main.py', str(x), str(shard_count)]))
+		processes.append(subprocess.Popen('./botLaunch.sh '+str(x)+' ' + str(shard_count), shell=True))
 	print("Launched processes")
 	with open("logs/pids.txt", "w") as target:
 		for process in processes:
 			target.write('{}\n'.format(process.pid))
 else:
 	print("Can't reach the Gateway endpoint. Giving up.")
+
