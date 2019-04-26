@@ -24,9 +24,10 @@ class Commands(Enum):
     VTALERT   = 2
     VTHELP    = 3
     VT        = 4
+    VTLAST    = 5
 
-def format_time(currentTime, lastReferenced):
-    diff = currentTime - lastReferenced
+def format_time(currentTime, pastTime):
+    diff = currentTime - pastTime
     hours = math.floor(diff.seconds/3600)
     minutes = math.floor((diff.seconds - hours*3600)/60)
     seconds = diff.seconds - hours*3600 - minutes*60
@@ -76,6 +77,8 @@ def parse_for_command(msg, msg_author):
         return Commands.NEEDADMIN
     elif msg.startswith('!vthelp'):
         return Commands.VTHELP
+    elif msg.startswith('!vtlast'):
+        return Commands.VTLAST
     elif msg.startswith('!vt'):
         return Commands.VT
 
@@ -118,7 +121,10 @@ def handle_message(server_dao, message, botID):
         currentServer['awake'] = True
         server_dao.insert_server(currentServer)
     elif foundCommand is Commands.VTHELP:
-        msg_to_send = "You can ask me how long we've made it with '!vt'.\n If you're an admin you can silence me with '!vtsilence' and wake me back up with '!vtalert'"
+        msg_to_send = "You can ask me how long we've made it with '!vt'.\nYou can learn how long it's been since my last warning with '!vtlast'.\nIf you're an admin you can silence me with '!vtsilence' and wake me back up with '!vtalert'"
+    elif foundCommand is Commands.VTLAST:
+        timeWithoutWarning = format_time(currentTime, currentServer['calledout_at'])
+        msg_to_send = "The server last received a warning {} ago.".format(timeWithoutWarning)
     elif foundCommand is Commands.VT:
         msg_to_send = "The server has gone {} without mentioning the forbidden word.".format(timeLasted)
 
