@@ -189,6 +189,34 @@ class TestAwakeCooldownBot(unittest.TestCase):
 
         self.assertEqual(message_to_send, False)
 
+class TestAsleepBot(unittest.TestCase):
+    def setUp(self):
+        self.current_time = datetime.datetime.now()
+        self.current_server = {
+            'server_id' : 1,
+            'infracted_at': self.current_time - datetime.timedelta(minutes=30),
+            'calledout_at': self.current_time - datetime.timedelta(minutes=40),
+            'awake' : False
+        }
+        self.server_dao = Mock(**{
+            'get_server.return_value': self.current_server,
+            'insert_server.return_value': None
+        })
+    def test_handle_message__infringing_post(self):
+        message = Mock(**{
+            'server': Mock(**{
+                'id': 1
+            }),
+            'content': "vore",
+            'author': Mock(**{
+                'id': 2,
+                'mention': "@test"
+            }),
+        })
+        message_to_send = bot.handle_message(self.server_dao, message, 1)
+
+        self.assertEqual(message_to_send, False)
+
 class TestFormatTime(unittest.TestCase):
     def test_format_time__one_of_each_elapsed(self):
         infraction_time = datetime.datetime(2019, 2, 11, 22, 7, 3)
@@ -275,6 +303,11 @@ class testCommandParsingAdmin(unittest.TestCase):
         cmd = bot.parse_for_command(msg, self.author)
         self.assertEqual(cmd, bot.Commands.VTHELP)
 
+    def test_parse_for_command__VTLast_only(self):
+        msg = "!vtlast"
+        cmd = bot.parse_for_command(msg, self.author)
+        self.assertEqual(cmd, bot.Commands.VTLAST)
+
 
 class testCommandParsingNoAdmin(unittest.TestCase):
     def setUp(self):
@@ -315,3 +348,8 @@ class testCommandParsingNoAdmin(unittest.TestCase):
         msg = "!vthelp"
         cmd = bot.parse_for_command(msg, self.author)
         self.assertEqual(cmd, bot.Commands.VTHELP)
+
+    def test_parse_for_command__VTLast_only(self):
+        msg = "!vtlast"
+        cmd = bot.parse_for_command(msg, self.author)
+        self.assertEqual(cmd, bot.Commands.VTLAST)
