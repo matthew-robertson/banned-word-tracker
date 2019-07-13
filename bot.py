@@ -86,7 +86,7 @@ def parse_for_command(msg, msg_author):
 
 def handle_message(server_dao, message, botID):
     if message.author.bot:
-        return ""
+        return False
 
     msg_to_send = False
     currentTime = datetime.datetime.now()
@@ -132,7 +132,7 @@ def handle_message(server_dao, message, botID):
         msg_to_send = "The server has gone {} without mentioning the forbidden word.".format(timeLasted)
 
     # Check if they've said the forbidden word
-    if ((pattern.search(message.content) is not None):
+    if pattern.search(message.content) is not None:
         tDiff = currentTime - currentServer['infracted_at']
         currentServer['infracted_at'] = currentTime
         
