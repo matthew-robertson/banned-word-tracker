@@ -64,6 +64,22 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
         message_to_send = bot.handle_message(self.server_dao, message, 1)
         self.assertEqual(message_to_send, self.infringedString)
 
+    def test_handle_message__infringing_post_from_bot(self):
+        message = Mock(**{
+            'server': Mock(**{
+                'id': 1
+            }),
+            'content': "asdf vore is the worst ",
+            'author': Mock(**{
+                'id': 2,
+                'mention': "@test",
+                bot: True
+            }),
+        })
+
+        message_to_send = bot.handle_message(self.server_dao, message, 1)
+        self.assertFalse(message_to_send)
+
     def test_handle_message__infringing_post_embedded_hyphen(self):
         message = Mock(**{
             'server': Mock(**{

@@ -85,6 +85,11 @@ def parse_for_command(msg, msg_author):
     return Commands.NOCOMMAND
 
 def handle_message(server_dao, message, botID):
+    if message.author.bot:
+        print("Skipping message from bot")
+        return ""
+    print("Handling message!")
+
     msg_to_send = False
     currentTime = datetime.datetime.now()
     fromUTC = currentTime - datetime.datetime.utcnow()
@@ -129,13 +134,13 @@ def handle_message(server_dao, message, botID):
         msg_to_send = "The server has gone {} without mentioning the forbidden word.".format(timeLasted)
 
     # Check if they've said the forbidden word
-    if ((pattern.search(message.content) is not None) and (message.author.id != botID)):
+    if ((pattern.search(message.content) is not None):
         tDiff = currentTime - currentServer['infracted_at']
         currentServer['infracted_at'] = currentTime
         
         if (currentServer['awake'] and (currentTime - currentServer['calledout_at']).total_seconds() >= 1800):
             currentServer['calledout_at'] = currentTime
-            msg_to_send = "{} referenced the forbidden word, setting the counter back to 0. I'll wait a half hour before warning you again.\n The server went {} without mentioning it.".format(message.author.mention, timeLasted)
+            msg_to_send = "{} referenced the forbidden vore word, setting the counter back to 0. I'll wait a half hour before warning you again.\n The server went {} without mentioning it.".format(message.author.mention, timeLasted)
 
         server_dao.insert_server(currentServer)
         print("{}::: {} lasted {} seconds.".format(currentTime, serverId, (tDiff).total_seconds()))
