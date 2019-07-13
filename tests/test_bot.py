@@ -27,7 +27,8 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
             'content': "I am a good boy",
             'author': Mock(**{
                 'id': 2,
-                'mention': "@test"
+                'mention': "@test",
+                'bot': False
             }),
         })
 
@@ -42,7 +43,8 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
             'content': "vore",
             'author': Mock(**{
                 'id': 2,
-                'mention': "@test"
+                'mention': "@test",
+                'bot': False
             }),
         })
 
@@ -57,12 +59,29 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
             'content': "asdf vore is the worst ",
             'author': Mock(**{
                 'id': 2,
-                'mention': "@test"
+                'mention': "@test",
+                'bot': False
             }),
         })
 
         message_to_send = bot.handle_message(self.server_dao, message, 1)
         self.assertEqual(message_to_send, self.infringedString)
+
+    def test_handle_message__infringing_post_from_bot(self):
+        message = Mock(**{
+            'server': Mock(**{
+                'id': 1
+            }),
+            'content': "asdf vore is the worst ",
+            'author': Mock(**{
+                'id': 2,
+                'mention': "@test",
+                'bot': True
+            }),
+        })
+
+        message_to_send = bot.handle_message(self.server_dao, message, 1)
+        self.assertFalse(message_to_send)
 
     def test_handle_message__infringing_post_embedded_hyphen(self):
         message = Mock(**{
@@ -72,7 +91,8 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
             'content': "asdf-vore-is the worst ",
             'author': Mock(**{
                 'id': 2,
-                'mention': "@test"
+                'mention': "@test",
+                'bot': False
             }),
         })
 
@@ -87,7 +107,8 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
             'content': "-v-o-r-e-",
             'author': Mock(**{
                 'id': 2,
-                'mention': "@test"
+                'mention': "@test",
+                'bot': False
             }),
         })
 
@@ -98,7 +119,8 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
             'content': "**v**o**r**e**D",
             'author': Mock(**{
                 'id': 2,
-                'mention': "@test"
+                'mention': "@test",
+                'bot': False
             }),
         })
 
@@ -109,7 +131,8 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
             'content': "|||v||||o||||r||e||s",
             'author': Mock(**{
                 'id': 2,
-                'mention': "@test"
+                'mention': "@test",
+                'bot': False
             }),
         })
 
@@ -128,7 +151,8 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
             'content': "vÒrË",
             'author': Mock(**{
                 'id': 2,
-                'mention': "@test"
+                'mention': "@test",
+                'bot': False
             }),
         })
 
@@ -139,7 +163,8 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
             'content': "vᴑRè",
             'author': Mock(**{
                 'id': 2,
-                'mention': "@test"
+                'mention': "@test",
+                'bot': False
             }),
         })
 
@@ -150,7 +175,8 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
             'content': "vÓrËD",
             'author': Mock(**{
                 'id': 2,
-                'mention': "@test"
+                'mention': "@test",
+                'bot': False
             }),
         })
 
@@ -182,7 +208,8 @@ class TestAwakeCooldownBot(unittest.TestCase):
             'content': "vore",
             'author': Mock(**{
                 'id': 2,
-                'mention': "@test"
+                'mention': "@test",
+                'bot': False
             }),
         })
         message_to_send = bot.handle_message(self.server_dao, message, 1)
@@ -210,7 +237,8 @@ class TestAsleepBot(unittest.TestCase):
             'content': "vore",
             'author': Mock(**{
                 'id': 2,
-                'mention': "@test"
+                'mention': "@test",
+                'bot': False
             }),
         })
         message_to_send = bot.handle_message(self.server_dao, message, 1)
@@ -260,7 +288,8 @@ class testCommandParsingAdmin(unittest.TestCase):
                 'mention': "@test",
                 'server_permissions': Mock(**{
                     'administrator': True
-                    })
+                    }),
+                'bot': False
             })
 
     def test_parse_for_command__VT(self):
@@ -316,7 +345,8 @@ class testCommandParsingNoAdmin(unittest.TestCase):
                 'mention': "@test",
                 'server_permissions': Mock(**{
                     'administrator': False
-                    })
+                    }),
+                'bot': False
             })
 
     def test_parse_for_command__VT_only(self):
