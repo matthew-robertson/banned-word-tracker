@@ -13,7 +13,7 @@ class ServerDao:
 
   def get_server(self, server_id):
     c = self.conn.cursor()
-    c.execute('SELECT * FROM `server` WHERE server_id='+str(server_id))
+    c.execute('SELECT server_id, infracted_at, calledout_at, awake, timeout_duration_seconds FROM `server` WHERE server_id='+str(server_id))
 
     row = c.fetchone()
     if row is None:
@@ -23,15 +23,19 @@ class ServerDao:
       'server_id': row[0], 
       'infracted_at': datetime.datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S"), 
       'calledout_at': datetime.datetime.strptime(row[2], "%Y-%m-%d %H:%M:%S"), 
-      'awake': row[3]
+      'awake': row[3],
+      'timeout_duration_seconds': row[4]
     }
     return server
 
   def insert_server(self, server_row):
     c = self.conn.cursor()
-    res = c.execute('INSERT OR REPLACE INTO `server` (server_id, infracted_at, calledout_at, awake) VALUES (?, ?, ?, ?)',
-            (server_row['server_id'], server_row['infracted_at'].strftime("%Y-%m-%d %H:%M:%S"),
-             server_row['calledout_at'].strftime("%Y-%m-%d %H:%M:%S"), int(server_row['awake'])))
+    res = c.execute('INSERT OR REPLACE INTO `server` (server_id, infracted_at, calledout_at, awake, timeout_duration_seconds) VALUES (?, ?, ?, ?, ?)',
+            (server_row['server_id'],
+             server_row['infracted_at'].strftime("%Y-%m-%d %H:%M:%S"),
+             server_row['calledout_at'].strftime("%Y-%m-%d %H:%M:%S"),
+             int(server_row['awake']),
+             server_row['timeout_duration_seconds']))
     self.conn.commit()
 
     return res

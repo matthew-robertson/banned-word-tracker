@@ -11,13 +11,14 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
             'server_id' : 1,
             'infracted_at': self.current_time - datetime.timedelta(minutes=30),
             'calledout_at': self.current_time - datetime.timedelta(minutes=30),
-            'awake' : True
+            'awake' : True,
+            'timeout_duration_seconds': 1800
         }
         self.server_dao = Mock(**{
             'get_server.return_value': self.current_server,
             'insert_server.return_value': None
         })
-        self.infringedString = "@test referenced the forbidden word, setting the counter back to 0. I'll wait a half hour before warning you again.\n The server went 30 minutes and 0 seconds without mentioning it."
+        self.infringedString = "@test referenced the forbidden word, setting the counter back to 0.\nI'll wait 30 minutes and 0 seconds before warning you again.\nThe server went 30 minutes and 0 seconds without mentioning the forbidden word."
 
     def test_handle_message__valid_post(self):
         message = Mock(**{
@@ -194,7 +195,8 @@ class TestAwakeCooldownBot(unittest.TestCase):
             'server_id' : 1,
             'infracted_at': self.current_time - datetime.timedelta(minutes=30),
             'calledout_at': self.current_time - datetime.timedelta(minutes=20),
-            'awake' : True
+            'awake' : True,
+            'timeout_duration_seconds': 1800
         }
         self.server_dao = Mock(**{
             'get_server.return_value': self.current_server,
@@ -223,7 +225,8 @@ class TestAsleepBot(unittest.TestCase):
             'server_id' : 1,
             'infracted_at': self.current_time - datetime.timedelta(minutes=30),
             'calledout_at': self.current_time - datetime.timedelta(minutes=40),
-            'awake' : False
+            'awake' : False,
+            'timeout_duration_seconds': 1800
         }
         self.server_dao = Mock(**{
             'get_server.return_value': self.current_server,
@@ -337,6 +340,11 @@ class testCommandParsingAdmin(unittest.TestCase):
         cmd = bot.parse_for_command(msg, self.author)
         self.assertEqual(cmd, bot.Commands.VTLAST)
 
+    def test_parse_for_command__VTCT_only(self):
+        msg = "!vtct"
+        cmd = bot.parse_for_command(msg, self.author)
+        self.assertEqual(cmd, bot.Commands.VTCT)
+
 
 class testCommandParsingNoAdmin(unittest.TestCase):
     def setUp(self):
@@ -383,3 +391,8 @@ class testCommandParsingNoAdmin(unittest.TestCase):
         msg = "!vtlast"
         cmd = bot.parse_for_command(msg, self.author)
         self.assertEqual(cmd, bot.Commands.VTLAST)
+
+    def test_parse_for_command__VTCT_only(self):
+        msg = "!vtct"
+        cmd = bot.parse_for_command(msg, self.author)
+        self.assertEqual(cmd, bot.Commands.VTCT)
