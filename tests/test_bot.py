@@ -18,7 +18,9 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
             'get_server.return_value': self.current_server,
             'insert_server.return_value': None
         })
-        self.infringedString = "@test referenced the forbidden word, setting the counter back to 0.\nI'll wait 30 minutes and 0 seconds before warning you again.\nThe server went 30 minutes and 0 seconds without mentioning the forbidden word."
+        self.infringedString = "@test referenced the forbidden word, setting the counter back to 0.\n"
+        self.infringedString += "I'll wait 30 minutes and 0 seconds before warning you again.\n"
+        self.infringedString += "The server went 30 minutes and 0 seconds without mentioning the forbidden word."
 
     def test_handle_message__valid_post(self):
         message = Mock(**{
