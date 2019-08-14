@@ -25,6 +25,7 @@ class Commands(Enum):
     VTHELP    = 3
     VT        = 4
     VTLAST    = 5
+    VTCT      = 6
 
 def format_time(currentTime, pastTime):
     diff = currentTime - pastTime
@@ -79,6 +80,8 @@ def parse_for_command(msg, msg_author):
         return Commands.VTHELP
     elif msg.startswith('!vtlast'):
         return Commands.VTLAST
+    elif msg.startswith('!vtct'):
+        return Commands.VTCT
     elif msg.startswith('!vt'):
         return Commands.VT
 
@@ -110,9 +113,13 @@ def handle_message(server_dao, message, botID):
         currentServer['infracted_at'] = bot.joined_at + fromUTC
         currentServer['calledout_at'] = bot.joined_at + fromUTC - datetime.timedelta(minutes=60)
         currentServer['awake'] = True
+        currentServer['timeout_duration_seconds'] = 1800
         server_dao.insert_server(currentServer)
 
     timeLasted = format_time(currentTime, currentServer['infracted_at'])
+    timeoutLength = format_time(currentTime, currentTime - datetime.timedelta(seconds=currentServer['timeout_duration_seconds']))
+    isCooldownActive = (currentTime - currentServer['calledout_at']).total_seconds() < currentServer['timeout_duration_seconds']
+    timeoutRemaining = format_time(currentServer['calledout_at'] + datetime.timedelta(seconds=currentServer['timeout_duration_seconds']), currentTime)
 
     foundCommand = parse_for_command(message.content, message.author)
     if foundCommand is Commands.VTSILENCE:
@@ -123,8 +130,16 @@ def handle_message(server_dao, message, botID):
         msg_to_send = "Ok {}, I'm scanning now.".format(message.author.mention)
         currentServer['awake'] = True
         server_dao.insert_server(currentServer)
+    elif foundCommand is Commands.VTCT:
+        msg_to_send = "The cooldown period is {}.\n".format(timeoutLength)
+        if isCooldownActive:
+            msg_to_send += "I'll be able to issue another alert in {}.".format(timeoutRemaining)
+        else:
+            msg_to_send += "I'm ready to issue another warning now."
     elif foundCommand is Commands.VTHELP:
-        msg_to_send = "You can ask me how long we've made it with '!vt'.\nYou can learn how long it's been since my last warning with '!vtlast'.\nIf you're an admin you can silence me with '!vtsilence' and wake me back up with '!vtalert'"
+        msg_to_send = "You can ask me how long we've made it with '!vt'.\n"
+        msg_to_send += "You can learn how long it's been since my last warning with '!vtlast'.\n"
+        msg_to_send += "If you're an admin you can silence me with '!vtsilence' and wake me back up with '!vtalert'"
     elif foundCommand is Commands.VTLAST:
         timeWithoutWarning = format_time(currentTime, currentServer['calledout_at'])
         msg_to_send = "The server last received a warning {} ago.".format(timeWithoutWarning)
@@ -136,9 +151,11 @@ def handle_message(server_dao, message, botID):
         tDiff = currentTime - currentServer['infracted_at']
         currentServer['infracted_at'] = currentTime
         
-        if (currentServer['awake'] and (currentTime - currentServer['calledout_at']).total_seconds() >= 1800):
+        if (currentServer['awake'] and not isCooldownActive):
             currentServer['calledout_at'] = currentTime
-            msg_to_send = "{} referenced the forbidden word, setting the counter back to 0. I'll wait a half hour before warning you again.\n The server went {} without mentioning it.".format(message.author.mention, timeLasted)
+            msg_to_send = "{} referenced the forbidden word, setting the counter back to 0.\n".format(message.author.mention)
+            msg_to_send += "I'll wait {} before warning you again.\n".format(timeoutLength)
+            msg_to_send += "The server went {} without mentioning the forbidden word.".format(timeLasted)
 
         server_dao.insert_server(currentServer)
         print("{}::: {} lasted {} seconds.".format(currentTime, serverId, (tDiff).total_seconds()))
