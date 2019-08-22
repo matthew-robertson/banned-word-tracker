@@ -26,6 +26,27 @@ class Commands(Enum):
     VT        = 4
     VTLAST    = 5
     VTCT      = 6
+    VTDELAY   = 7
+
+def parse_time(timeString):
+    splits = timeString.strip().split(':')
+    if not is_valid_time(splits):
+        return -1
+
+    secondTotal = int(splits[-1])
+    if len(splits) >= 2:
+        secondTotal += int(splits[-2]) * 60
+    if len(splits) >= 3:
+        secondTotal += int(splits[-3]) * 60 * 60
+
+    return secondTotal
+
+def is_valid_time(timeSplits):
+    return all(split.isnumeric() for split in timeSplits) and len(timeSplits) <= 3
+
+def format_seconds(secondsCount):
+    currentTime = datetime.datetime.now()
+    return format_time(currentTime, currentTime - datetime.timedelta(seconds=secondsCount))
 
 def format_time(currentTime, pastTime):
     diff = currentTime - pastTime
@@ -72,9 +93,11 @@ def parse_for_command(msg, msg_author):
             return Commands.VTSILENCE            
         elif msg.startswith('!vtalert') and permission.administrator:
             return Commands.VTALERT
+        elif msg.startswith('!vtdelay') and permission.administrator:
+            return Commands.VTDELAY
 
     # Check the other commands
-    if msg.startswith('!vtsilence') or msg.startswith('!vtalert'):
+    if msg.startswith('!vtsilence') or msg.startswith('!vtalert') or msg.startswith('!vtdelay'):
         return Commands.NEEDADMIN
     elif msg.startswith('!vthelp'):
         return Commands.VTHELP
@@ -87,17 +110,11 @@ def parse_for_command(msg, msg_author):
 
     return Commands.NOCOMMAND
 
-def handle_message(server_dao, message, botID):
-    if message.author.bot:
+def handle_message(server_dao, message, botID, currentTime):
+    if not message.server or message.author.bot:
         return False
 
     msg_to_send = False
-    currentTime = datetime.datetime.now()
-    fromUTC = currentTime - datetime.datetime.utcnow()
-
-    if not message.server:
-        return msg_to_send
-
     serverId = message.server.id
     currentServer = server_dao.get_server(serverId)
     if currentServer is None:
@@ -109,7 +126,7 @@ def handle_message(server_dao, message, botID):
                 bot = x
                 break
 
-
+        fromUTC = datetime.datetime.now() - datetime.datetime.utcnow()
         currentServer['infracted_at'] = bot.joined_at + fromUTC
         currentServer['calledout_at'] = bot.joined_at + fromUTC - datetime.timedelta(minutes=60)
         currentServer['awake'] = True
@@ -117,7 +134,7 @@ def handle_message(server_dao, message, botID):
         server_dao.insert_server(currentServer)
 
     timeLasted = format_time(currentTime, currentServer['infracted_at'])
-    timeoutLength = format_time(currentTime, currentTime - datetime.timedelta(seconds=currentServer['timeout_duration_seconds']))
+    timeoutLength = format_seconds(currentServer['timeout_duration_seconds'])
     isCooldownActive = (currentTime - currentServer['calledout_at']).total_seconds() < currentServer['timeout_duration_seconds']
     timeoutRemaining = format_time(currentServer['calledout_at'] + datetime.timedelta(seconds=currentServer['timeout_duration_seconds']), currentTime)
 
@@ -130,6 +147,18 @@ def handle_message(server_dao, message, botID):
         msg_to_send = "Ok {}, I'm scanning now.".format(message.author.mention)
         currentServer['awake'] = True
         server_dao.insert_server(currentServer)
+    elif foundCommand is Commands.VTDELAY:
+        time_string = message.content[8:]
+        parsed_time = parse_time(time_string)
+
+        if parsed_time >= 0:
+            formatted_time = format_seconds(parsed_time)
+            msg_to_send = "Cool, from now on I'll wait at least {} between alerts.".format(formatted_time)
+            
+            currentServer['timeout_duration_seconds'] = parsed_time
+            server_dao.insert_server(currentServer)
+        else:
+            msg_to_send = "Sorry, I don't understand that formatting. I was expecting something like '!vtct hh:mm:ss'"
     elif foundCommand is Commands.VTCT:
         msg_to_send = "The cooldown period is {}.\n".format(timeoutLength)
         if isCooldownActive:
@@ -139,7 +168,9 @@ def handle_message(server_dao, message, botID):
     elif foundCommand is Commands.VTHELP:
         msg_to_send = "You can ask me how long we've made it with '!vt'.\n"
         msg_to_send += "You can learn how long it's been since my last warning with '!vtlast'.\n"
-        msg_to_send += "If you're an admin you can silence me with '!vtsilence' and wake me back up with '!vtalert'"
+        msg_to_send += "You can learn how long my timeout is set for, and when I can issue another warning with '!vtct'.\n"
+        msg_to_send += "If you're an admin, you can silence me with '!vtsilence' or wake me back up with '!vtalert'.\n"
+        msg_to_send += "If you're an admin, you can use '!vtdelay hh:mm:ss` to set the length of the timeout."
     elif foundCommand is Commands.VTLAST:
         timeWithoutWarning = format_time(currentTime, currentServer['calledout_at'])
         msg_to_send = "The server last received a warning {} ago.".format(timeWithoutWarning)
@@ -175,13 +206,13 @@ def run_bot(conn, shard_id, shard_count, client_key):
 
     @client.event
     async def on_message_edit(before, message):
-        msg_to_send = handle_message(server_dao, message, client.user.id)    
+        msg_to_send = handle_message(server_dao, message, client.user.id, datetime.datetime.now())    
         if msg_to_send:
             await client.send_message(message.channel, msg_to_send)
 
     @client.event
     async def on_message(message):
-        msg_to_send = handle_message(server_dao, message, client.user.id)    
+        msg_to_send = handle_message(server_dao, message, client.user.id, datetime.datetime.now())    
         if msg_to_send:
             await client.send_message(message.channel, msg_to_send)
 
