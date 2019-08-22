@@ -30,7 +30,7 @@ class Commands(Enum):
 
 def parse_time(timeString):
     splits = timeString.strip().split(':')
-    if (not is_valid_time(splits) or len(splits) > 3):
+    if not is_valid_time(splits):
         return -1
 
     secondTotal = int(splits[-1])
@@ -42,10 +42,11 @@ def parse_time(timeString):
     return secondTotal
 
 def is_valid_time(timeSplits):
-    return all(split.isnumeric() for split in timeSplits)
+    return all(split.isnumeric() for split in timeSplits) and len(timeSplits) <= 3
 
 def format_seconds(secondsCount):
-    return format_time(datetime.datetime.now(), datetime.datetime.now() - datetime.timedelta(seconds=secondsCount))
+    currentTime = datetime.datetime.now()
+    return format_time(currentTime, currentTime - datetime.timedelta(seconds=secondsCount))
 
 def format_time(currentTime, pastTime):
     diff = currentTime - pastTime
@@ -109,17 +110,11 @@ def parse_for_command(msg, msg_author):
 
     return Commands.NOCOMMAND
 
-def handle_message(server_dao, message, botID):
-    if message.author.bot:
+def handle_message(server_dao, message, botID, currentTime):
+    if not message.server or message.author.bot:
         return False
 
     msg_to_send = False
-    currentTime = datetime.datetime.now()
-    fromUTC = currentTime - datetime.datetime.utcnow()
-
-    if not message.server:
-        return msg_to_send
-
     serverId = message.server.id
     currentServer = server_dao.get_server(serverId)
     if currentServer is None:
@@ -131,7 +126,7 @@ def handle_message(server_dao, message, botID):
                 bot = x
                 break
 
-
+        fromUTC = datetime.datetime.now() - datetime.datetime.utcnow()
         currentServer['infracted_at'] = bot.joined_at + fromUTC
         currentServer['calledout_at'] = bot.joined_at + fromUTC - datetime.timedelta(minutes=60)
         currentServer['awake'] = True
@@ -173,7 +168,9 @@ def handle_message(server_dao, message, botID):
     elif foundCommand is Commands.VTHELP:
         msg_to_send = "You can ask me how long we've made it with '!vt'.\n"
         msg_to_send += "You can learn how long it's been since my last warning with '!vtlast'.\n"
-        msg_to_send += "If you're an admin you can silence me with '!vtsilence' and wake me back up with '!vtalert'"
+        msg_to_send += "You can learn how long my timeout is set for, and when I can issue another warning with '!vtct'.\n"
+        msg_to_send += "If you're an admin, you can silence me with '!vtsilence' or wake me back up with '!vtalert'.\n"
+        msg_to_send += "If you're an admin, you can use '!vtdelay hh:mm:ss` to set the length of the timeout."
     elif foundCommand is Commands.VTLAST:
         timeWithoutWarning = format_time(currentTime, currentServer['calledout_at'])
         msg_to_send = "The server last received a warning {} ago.".format(timeWithoutWarning)
@@ -209,13 +206,13 @@ def run_bot(conn, shard_id, shard_count, client_key):
 
     @client.event
     async def on_message_edit(before, message):
-        msg_to_send = handle_message(server_dao, message, client.user.id)    
+        msg_to_send = handle_message(server_dao, message, client.user.id, datetime.datetime.now())    
         if msg_to_send:
             await client.send_message(message.channel, msg_to_send)
 
     @client.event
     async def on_message(message):
-        msg_to_send = handle_message(server_dao, message, client.user.id)    
+        msg_to_send = handle_message(server_dao, message, client.user.id, datetime.datetime.now())    
         if msg_to_send:
             await client.send_message(message.channel, msg_to_send)
 
