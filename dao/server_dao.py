@@ -13,7 +13,7 @@ class ServerDao:
 
   def get_server(self, server_id):
     c = self.conn.cursor()
-    c.execute('SELECT server_id, infracted_at, calledout_at, awake, timeout_duration_seconds FROM `server` WHERE server_id='+str(server_id))
+    c.execute('SELECT server_id, awake, timeout_duration_seconds FROM `server` WHERE server_id='+str(server_id))
 
     row = c.fetchone()
     if row is None:
@@ -21,10 +21,8 @@ class ServerDao:
 
     server = {
       'server_id': row[0], 
-      'infracted_at': datetime.datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S"), 
-      'calledout_at': datetime.datetime.strptime(row[2], "%Y-%m-%d %H:%M:%S"), 
-      'awake': row[3],
-      'timeout_duration_seconds': row[4]
+      'awake': row[1],
+      'timeout_duration_seconds': row[2]
     }
     return server
 
@@ -44,30 +42,41 @@ class ServerDao:
 
   def insert_server(self, server_row):
     c = self.conn.cursor()
-    res = c.execute('INSERT OR REPLACE INTO `server` (server_id, infracted_at, calledout_at, awake, timeout_duration_seconds) VALUES (?, ?, ?, ?, ?)',
+    res = c.execute('INSERT OR REPLACE INTO `server` (server_id, awake, timeout_duration_seconds, calledout_at, infracted_at) VALUES (?, ?, ?, ?, ?)',
             (server_row['server_id'],
-             server_row['infracted_at'].strftime("%Y-%m-%d %H:%M:%S"),
-             server_row['calledout_at'].strftime("%Y-%m-%d %H:%M:%S"),
              int(server_row['awake']),
-             server_row['timeout_duration_seconds']))
+             server_row['timeout_duration_seconds'],
+             "-1",
+             "-1"))
     self.conn.commit()
 
     return res
 
 
-  def insert_multiple_words(word_rows):
+  def update_multiple_words(word_rows):
     for row in word_rows:
-      insert_banned_word(row)
+      update_banned_word(row)
 
 
-  def insert_banned_word(self, word_row):
+  def update_banned_word(self, word_row):
     c = self.conn.cursor()
-    res = c.execute('INSERT OR REPLACE INTO `server_banned_word` (row_id, server_id, banned_word, infracted_at, calledout_at) VALUES (?, ?, ?, ?, ?)',
-            (word_row['rowid'],
-             word_row['server_id'],
-             word_row['banned_word']
+    res = c.execute("UPDATE `server_banned_word` SET banned_word=?, infracted_at=?, calledout_at=? WHERE rowid=? AND server_id=?",
+            (word_row['banned_word'],
              word_row['infracted_at'].strftime("%Y-%m-%d %H:%M:%S"),
              word_row['calledout_at'].strftime("%Y-%m-%d %H:%M:%S"),
+             word_row['rowid'],
+             word_row['server_id']))
+    self.conn.commit()
+
+    return res
+
+  def insert_default_banned_word(self, server_id, join_time):
+    c = self.conn.cursor()
+    res = c.execute('INSERT INTO `server_banned_word` (server_id, banned_word, infracted_at, calledout_at) VALUES (?, ?, ?, ?)',
+            (server_id,
+             'vore',
+             join_time.strftime("%Y-%m-%d %H:%M:%S"),
+             (join_time - datetime.timedelta(minutes=60)).strftime("%Y-%m-%d %H:%M:%S")))
     self.conn.commit()
 
     return res

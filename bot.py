@@ -5,17 +5,9 @@ from enum import Enum
 import math
 import re
 import time
+from confusables import confusable_regex
 
 from dao.server_dao import ServerDao
-
-# A pattern to match the word vore, and only the single word vore.
-betweenStr = r'[\*_~|`\-\.]*'
-pattern = re.compile(r'\b' + betweenStr +
-                    r'[Vv]' + betweenStr +
-                    r'[OÒÓÔÕÖoòóôõöᴑо]' + betweenStr +
-                    r'[Rr]' + betweenStr +
-                    r'[EÈÉÊËЕeèéêëе]' + betweenStr +
-                    r'([Ss]|[Dd])?\b')
 
 class Commands(Enum):
     NEEDADMIN = -1
@@ -27,29 +19,30 @@ class Commands(Enum):
     VTLAST    = 5
     VTCT      = 6
     VTDELAY   = 7
+    VTBAN     = 8
 
-def parse_time(timeString):
-    splits = timeString.strip().split(':')
+def parse_time(time_string):
+    splits = time_string.strip().split(':')
     if not is_valid_time(splits):
         return -1
 
-    secondTotal = int(splits[-1])
+    second_total = int(splits[-1])
     if len(splits) >= 2:
-        secondTotal += int(splits[-2]) * 60
+        second_total += int(splits[-2]) * 60
     if len(splits) >= 3:
-        secondTotal += int(splits[-3]) * 60 * 60
+        second_total += int(splits[-3]) * 60 * 60
 
-    return secondTotal
+    return second_total
 
-def is_valid_time(timeSplits):
-    return all(split.isnumeric() for split in timeSplits) and len(timeSplits) <= 3
+def is_valid_time(time_splits):
+    return all(split.isnumeric() for split in time_splits) and len(time_splits) <= 3
 
-def format_seconds(secondsCount):
-    currentTime = datetime.datetime.now()
-    return format_time(currentTime, currentTime - datetime.timedelta(seconds=secondsCount))
+def format_seconds(seconds_count):
+    current_time = datetime.datetime.now()
+    return format_time(current_time, current_time - datetime.timedelta(seconds=seconds_count))
 
-def format_time(currentTime, pastTime):
-    diff = currentTime - pastTime
+def format_time(current_time, pastTime):
+    diff = current_time - pastTime
     hours = math.floor(diff.seconds/3600)
     minutes = math.floor((diff.seconds - hours*3600)/60)
     seconds = diff.seconds - hours*3600 - minutes*60
@@ -95,9 +88,11 @@ def parse_for_command(msg, msg_author):
             return Commands.VTALERT
         elif msg.startswith('!vtdelay') and permission.administrator:
             return Commands.VTDELAY
+        elif msg.startswith('!vtban') and permission.administrator:
+            return Commands.VTBAN
 
     # Check the other commands
-    if msg.startswith('!vtsilence') or msg.startswith('!vtalert') or msg.startswith('!vtdelay'):
+    if msg.startswith('!vtsilence') or msg.startswith('!vtalert') or msg.startswith('!vtdelay') or msg.startswith('!vtban'):
         return Commands.NEEDADMIN
     elif msg.startswith('!vthelp'):
         return Commands.VTHELP
@@ -110,16 +105,140 @@ def parse_for_command(msg, msg_author):
 
     return Commands.NOCOMMAND
 
-def handle_message(server_dao, message, botID, currentTime):
-    if not message.server or message.author.bot:
-        return False
+def handle_vtsilence(server_dao, current_server, msg_author):
+    msg_to_send = "Ok {}, I'll be quiet now. use '!vtalert' to wake me back up!".format(msg_author.mention)
+    current_server['awake'] = False
+    server_dao.insert_server(current_server)
+    return msg_to_send
 
-    msg_to_send = False
-    serverId = message.server.id
-    currentServer = server_dao.get_server(serverId)
-    if currentServer is None:
-        currentServer = {}
-        currentServer['server_id'] = serverId
+def handle_vtalert(server_dao, current_server, msg_author):
+    msg_to_send = "Ok {}, I'm scanning now.".format(msg_author.mention)
+    current_server['awake'] = True
+    server_dao.insert_server(current_server)
+    return msg_to_send
+
+def handle_vtban(server_dao, current_time, banned_words, new_word, msg_author, timeout_length):
+    if len(new_word) < 1:
+        return "Sorry, I can't ban the empty string. Please try a message of the form '!vtban [wordToBan]'"
+
+    banned_words[0]['banned_word'] = new_word
+    banned_words[0]['infracted_at'] = current_time
+    banned_words[0]['calledout_at'] = current_time - datetime.timedelta(seconds=timeout_length)
+    server_dao.update_banned_word(banned_words[0])
+    msg_to_send = "Ok {}, '{}' is now considered a forbidden word.".format(msg_author.mention, new_word)
+    return msg_to_send
+
+def handle_vtdelay(server_dao, current_server, time_string):
+    parsed_time = parse_time(time_string)
+
+    if parsed_time >= 0:
+        current_server['timeout_duration_seconds'] = parsed_time
+        server_dao.insert_server(current_server)
+        formatted_time = format_seconds(parsed_time)
+        return "Cool, from now on I'll wait at least {} between alerts.".format(formatted_time)
+    else:
+        return "Sorry, I don't understand that formatting. I was expecting something like '!vtct hh:mm:ss'"
+
+def handle_vtct(current_time, current_server, banned_words):
+    timeout_length = format_seconds(current_server['timeout_duration_seconds'])
+    msg_to_send = "The cooldown period is {}.".format(timeout_length)
+
+    for banned_word in banned_words:
+        timeoutRemaining = format_time(banned_word['calledout_at'] + datetime.timedelta(seconds=current_server['timeout_duration_seconds']), current_time)
+        isCooldownActive = (current_time - banned_word['calledout_at']).total_seconds() < current_server['timeout_duration_seconds']
+        if isCooldownActive:
+            msg_to_send += "\nI'll be able to issue another alert for '{}' in {}.".format(banned_word['banned_word'], timeoutRemaining)
+        else:
+            msg_to_send += "\nI'm ready to issue another warning for '{}' now.".format(banned_word['banned_word'])
+
+    return msg_to_send
+
+def handle_vthelp():
+    msg_to_send = "You can ask me how long we've made it with '!vt'.\n"
+    msg_to_send += "You can learn how long it's been since my last warning with '!vtlast'.\n"
+    msg_to_send += "You can learn how long my timeout is set for, and when I can issue another warning with '!vtct'.\n"
+    msg_to_send += "If you're an admin, you can silence me with '!vtsilence' or wake me back up with '!vtalert'.\n"
+    msg_to_send += "If you're an admin, you can use '!vtdelay hh:mm:ss` to set the length of the timeout.\n"
+    msg_to_send += "If you're an admin, you can use '!vtban word_to_ban' to change the banned word for the server.\n"
+    return msg_to_send
+
+def handle_vtlast(current_time, banned_words):
+    time_without_warning = format_time(current_time, banned_words[0]['calledout_at'])
+    msg_to_send = "The server last received a warning for '{}' {} ago.".format(banned_words[0]['banned_word'], time_without_warning)
+
+    for banned_word in banned_words[1:]:
+        time_without_warning = format_time(current_time, banned_word['calledout_at'])
+        msg_to_send += "\nThe server last received a warning for '{}' {} ago.".format(banned_word['banned_word'], time_without_warning)
+
+    return msg_to_send
+
+def handle_vt(current_time, banned_words):
+    timeLasted = format_time(current_time, banned_words[0]['infracted_at'])
+    msg_to_send = "The server has gone {} without mentioning '{}'.".format(timeLasted, banned_words[0]['banned_word'])
+    for banned_word in banned_words[1:]:
+        timeLasted = format_time(current_time, banned_word['infracted_at'])
+        msg_to_send += "\nThe server has gone {} without mentioning '{}'.".format(timeLasted, banned_word['banned_word'])
+
+    msg_to_send += "\nAs a new feature, server administrators are able to change the banned word using !vtban."
+    return msg_to_send
+
+def handle_command(found_command, server_dao, current_time, current_server, banned_words, message):
+    msg_to_send = ""
+    if found_command is Commands.VTSILENCE:
+        msg_to_send = handle_vtsilence(server_dao, current_server, message.author)
+    elif found_command is Commands.VTALERT:
+        msg_to_send = handle_vtalert(server_dao, current_server, message.author)
+    elif found_command is Commands.VTDELAY:
+        msg_to_send = handle_vtdelay(server_dao, current_server, message.content[8:])
+    elif found_command is Commands.VTBAN:
+        new_word = message.content[6:].lstrip().split(' ')[0]
+        msg_to_send = handle_vtban(server_dao, current_time, banned_words, new_word, message.author, current_server['timeout_duration_seconds'])
+    elif found_command is Commands.VTCT:
+        msg_to_send = handle_vtct(current_time, current_server, banned_words)
+    elif found_command is Commands.VTHELP:
+        msg_to_send = handle_vthelp()
+    elif found_command is Commands.VTLAST:
+        msg_to_send = handle_vtlast(current_time, banned_words)
+    elif found_command is Commands.VT:
+        msg_to_send = handle_vt(current_time, banned_words)
+
+    return msg_to_send
+
+def detect_banned_word(message, banned_word):
+    pattern = confusable_regex(banned_word, True)
+    if re.search(pattern, message) is not None:
+        return True
+    return False
+
+def handle_detected_banned_word(server_dao, current_time, current_server, message, banned_word):
+    time_lasted = format_time(current_time, banned_word['infracted_at'])
+    timeout_length = format_seconds(current_server['timeout_duration_seconds'])
+    is_cooldown_active = (current_time - banned_word['calledout_at']).total_seconds() < current_server['timeout_duration_seconds']
+    tDiff = current_time - banned_word['infracted_at']
+    banned_word['infracted_at'] = current_time
+
+    msg_to_send = ""
+    if (current_server['awake'] and not is_cooldown_active):
+        banned_word['calledout_at'] = current_time
+        msg_to_send = "{} referenced a forbidden word, setting its counter back to 0.\n".format(message.author.mention)
+        msg_to_send += "I'll wait {} before warning you for this word again.\n".format(timeout_length)
+        msg_to_send += "The server went {} without mentioning the forbidden word '{}'.".format(time_lasted, banned_word['banned_word'])
+
+    server_dao.update_banned_word(banned_word)
+    print("{}::: {} lasted {} seconds.".format(current_time, current_server['server_id'], (tDiff).total_seconds()))
+    return msg_to_send
+
+
+
+def handle_message(server_dao, message, botID, current_time):
+    if not message.server or message.author.bot:
+        return ""
+
+    server_id = message.server.id
+    current_server = server_dao.get_server(server_id)
+    if current_server is None:
+        current_server = {}
+        current_server['server_id'] = server_id
         bot = None
         for x in message.server.members:
             if botID == x.id:
@@ -127,71 +246,30 @@ def handle_message(server_dao, message, botID, currentTime):
                 break
 
         fromUTC = datetime.datetime.now() - datetime.datetime.utcnow()
-        currentServer['infracted_at'] = bot.joined_at + fromUTC
-        currentServer['calledout_at'] = bot.joined_at + fromUTC - datetime.timedelta(minutes=60)
-        currentServer['awake'] = True
-        currentServer['timeout_duration_seconds'] = 1800
-        server_dao.insert_server(currentServer)
+        current_server['awake'] = True
+        current_server['timeout_duration_seconds'] = 1800
+        server_dao.insert_server(current_server)
+        server_dao.insert_default_banned_word(server_id, bot.joined_at + fromUTC)
 
-    timeLasted = format_time(currentTime, currentServer['infracted_at'])
-    timeoutLength = format_seconds(currentServer['timeout_duration_seconds'])
-    isCooldownActive = (currentTime - currentServer['calledout_at']).total_seconds() < currentServer['timeout_duration_seconds']
-    timeoutRemaining = format_time(currentServer['calledout_at'] + datetime.timedelta(seconds=currentServer['timeout_duration_seconds']), currentTime)
+    banned_words = server_dao.get_banned_words_for_server(server_id)
 
-    foundCommand = parse_for_command(message.content, message.author)
-    if foundCommand is Commands.VTSILENCE:
-        msg_to_send = "Ok {}, I'll be quiet now. use '!vtalert' to wake me back up!".format(message.author.mention)
-        currentServer['awake'] = False
-        server_dao.insert_server(currentServer)
-    elif foundCommand is Commands.VTALERT:
-        msg_to_send = "Ok {}, I'm scanning now.".format(message.author.mention)
-        currentServer['awake'] = True
-        server_dao.insert_server(currentServer)
-    elif foundCommand is Commands.VTDELAY:
-        time_string = message.content[8:]
-        parsed_time = parse_time(time_string)
-
-        if parsed_time >= 0:
-            formatted_time = format_seconds(parsed_time)
-            msg_to_send = "Cool, from now on I'll wait at least {} between alerts.".format(formatted_time)
-            
-            currentServer['timeout_duration_seconds'] = parsed_time
-            server_dao.insert_server(currentServer)
-        else:
-            msg_to_send = "Sorry, I don't understand that formatting. I was expecting something like '!vtct hh:mm:ss'"
-    elif foundCommand is Commands.VTCT:
-        msg_to_send = "The cooldown period is {}.\n".format(timeoutLength)
-        if isCooldownActive:
-            msg_to_send += "I'll be able to issue another alert in {}.".format(timeoutRemaining)
-        else:
-            msg_to_send += "I'm ready to issue another warning now."
-    elif foundCommand is Commands.VTHELP:
-        msg_to_send = "You can ask me how long we've made it with '!vt'.\n"
-        msg_to_send += "You can learn how long it's been since my last warning with '!vtlast'.\n"
-        msg_to_send += "You can learn how long my timeout is set for, and when I can issue another warning with '!vtct'.\n"
-        msg_to_send += "If you're an admin, you can silence me with '!vtsilence' or wake me back up with '!vtalert'.\n"
-        msg_to_send += "If you're an admin, you can use '!vtdelay hh:mm:ss` to set the length of the timeout."
-    elif foundCommand is Commands.VTLAST:
-        timeWithoutWarning = format_time(currentTime, currentServer['calledout_at'])
-        msg_to_send = "The server last received a warning {} ago.".format(timeWithoutWarning)
-    elif foundCommand is Commands.VT:
-        msg_to_send = "The server has gone {} without mentioning the forbidden word.".format(timeLasted)
+    found_command = parse_for_command(message.content, message.author)
+    msg_to_send = handle_command(found_command, server_dao, current_time, current_server, banned_words, message)
 
     # Check if they've said the forbidden word
-    if pattern.search(message.content) is not None:
-        tDiff = currentTime - currentServer['infracted_at']
-        currentServer['infracted_at'] = currentTime
-        
-        if (currentServer['awake'] and not isCooldownActive):
-            currentServer['calledout_at'] = currentTime
-            msg_to_send = "{} referenced the forbidden word, setting the counter back to 0.\n".format(message.author.mention)
-            msg_to_send += "I'll wait {} before warning you again.\n".format(timeoutLength)
-            msg_to_send += "The server went {} without mentioning the forbidden word.".format(timeLasted)
+    banned_word_msg = ""
+    if not found_command is Commands.VTBAN:
+        for banned_word in banned_words:
+            contains_banned_word = detect_banned_word(message.content, banned_word['banned_word'])
+            if contains_banned_word:
+                temp_msg = handle_detected_banned_word(server_dao, current_time, current_server, message, banned_word)
+                if len(banned_word_msg):
+                    banned_word_msg += "\n"
+                banned_word_msg += temp_msg
 
-        server_dao.insert_server(currentServer)
-        print("{}::: {} lasted {} seconds.".format(currentTime, serverId, (tDiff).total_seconds()))
-
-    return msg_to_send
+    if len(msg_to_send) and len(banned_word_msg):
+        msg_to_send += "\n"
+    return msg_to_send + banned_word_msg
 
 def run_bot(conn, shard_id, shard_count, client_key):
     client = discord.Client(shard_id=shard_id, shard_count=shard_count)
@@ -207,7 +285,7 @@ def run_bot(conn, shard_id, shard_count, client_key):
     @client.event
     async def on_message_edit(before, message):
         msg_to_send = handle_message(server_dao, message, client.user.id, datetime.datetime.now())    
-        if msg_to_send:
+        if len(msg_to_send):
             await client.send_message(message.channel, msg_to_send)
 
     @client.event
