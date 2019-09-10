@@ -9,18 +9,51 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
         self.current_time = datetime.datetime.now()
         self.current_server = {
             'server_id' : 1,
-            'infracted_at': self.current_time - datetime.timedelta(minutes=30),
-            'calledout_at': self.current_time - datetime.timedelta(minutes=30),
             'awake' : True,
             'timeout_duration_seconds': 1800
         }
+        self.banned_words = [{
+            'rowid': 1,
+            'server_id': 1,
+            'banned_word': 'vore',
+            'infracted_at': self.current_time - datetime.timedelta(minutes=30),
+            'calledout_at': self.current_time - datetime.timedelta(minutes=30)
+        },
+        {
+            'rowid': 2,
+            'server_id': 2,
+            'banned_word': 'bepis',
+            'infracted_at': self.current_time - datetime.timedelta(minutes=30),
+            'calledout_at': self.current_time - datetime.timedelta(minutes=30)
+        }]
         self.server_dao = Mock(**{
             'get_server.return_value': self.current_server,
+            'get_banned_words_for_server.return_value': self.banned_words,
             'insert_server.return_value': None
         })
-        self.infringedString = "@test referenced the forbidden word, setting the counter back to 0.\n"
-        self.infringedString += "I'll wait 30 minutes and 0 seconds before warning you again.\n"
-        self.infringedString += "The server went 30 minutes and 0 seconds without mentioning the forbidden word."
+        self.infringedString = "@test referenced a forbidden word, setting its counter back to 0.\n"
+        self.infringedString += "I'll wait 30 minutes and 0 seconds before warning you for this word again.\n"
+        self.infringedString += "The server went 30 minutes and 0 seconds without mentioning the forbidden word 'vore'."
+
+    def test_handle_message__different_word(self):
+        message = Mock(**{
+            'server': Mock(**{
+                'id': 1
+            }),
+            'content': "bepis is good",
+            'author': Mock(**{
+                'id': 2,
+                'mention': "@test",
+                'bot': False
+            }),
+        })
+
+        message_to_send = bot.handle_message(self.server_dao, message, 1, self.current_time)
+
+        infringedString = "@test referenced a forbidden word, setting its counter back to 0.\n"
+        infringedString += "I'll wait 30 minutes and 0 seconds before warning you for this word again.\n"
+        infringedString += "The server went 30 minutes and 0 seconds without mentioning the forbidden word 'bepis'."
+        self.assertEqual(message_to_send, infringedString)
 
     def test_handle_message__valid_post(self):
         message = Mock(**{
@@ -119,7 +152,7 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
             'server': Mock(**{
                 'id': 1
             }),
-            'content': "**v**o**r**e**D",
+            'content': "**v**o**r**e**",
             'author': Mock(**{
                 'id': 2,
                 'mention': "@test",
@@ -131,7 +164,7 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
             'server': Mock(**{
                 'id': 1
             }),
-            'content': "|||v||||o||||r||e||s",
+            'content': "|||v||||o||||r||e|||",
             'author': Mock(**{
                 'id': 2,
                 'mention': "@test",
@@ -195,13 +228,19 @@ class TestAwakeCooldownBot(unittest.TestCase):
         self.current_time = datetime.datetime.now()
         self.current_server = {
             'server_id' : 1,
-            'infracted_at': self.current_time - datetime.timedelta(minutes=30),
-            'calledout_at': self.current_time - datetime.timedelta(minutes=20),
             'awake' : True,
             'timeout_duration_seconds': 1800
         }
+        self.banned_words = [{
+            'rowid': 1,
+            'server_id': 1,
+            'banned_word': 'vore',
+            'infracted_at': self.current_time - datetime.timedelta(minutes=30),
+            'calledout_at': self.current_time - datetime.timedelta(minutes=20)
+        }]
         self.server_dao = Mock(**{
             'get_server.return_value': self.current_server,
+            'get_banned_words_for_server.return_value': self.banned_words,
             'insert_server.return_value': None
         })
     def test_handle_message__infringing_post(self):
@@ -218,7 +257,7 @@ class TestAwakeCooldownBot(unittest.TestCase):
         })
         message_to_send = bot.handle_message(self.server_dao, message, 1, self.current_time)
 
-        self.assertEqual(message_to_send, False)
+        self.assertEqual(message_to_send, '')
 
 class TestAsleepBot(unittest.TestCase):
     def setUp(self):
@@ -230,8 +269,16 @@ class TestAsleepBot(unittest.TestCase):
             'awake' : False,
             'timeout_duration_seconds': 1800
         }
+        self.banned_words = [{
+            'rowid': 1,
+            'server_id': 1,
+            'banned_word': 'vore',
+            'infracted_at': self.current_time - datetime.timedelta(minutes=30),
+            'calledout_at': self.current_time - datetime.timedelta(minutes=30)
+        }]
         self.server_dao = Mock(**{
             'get_server.return_value': self.current_server,
+            'get_banned_words_for_server.return_value': self.banned_words,
             'insert_server.return_value': None
         })
     def test_handle_message__infringing_post(self):
@@ -248,7 +295,7 @@ class TestAsleepBot(unittest.TestCase):
         })
         message_to_send = bot.handle_message(self.server_dao, message, 1, self.current_time)
 
-        self.assertEqual(message_to_send, False)
+        self.assertEqual(message_to_send, '')
 
 class TestIsValidTime(unittest.TestCase):
     def test_is_valid_time__valid_time(self):
@@ -437,6 +484,11 @@ class testCommandParsingAdmin(unittest.TestCase):
         cmd = bot.parse_for_command(msg, self.author)
         self.assertEqual(cmd, bot.Commands.VTCT)
 
+    def test_parse_for_command__VTBan_only(self):
+        msg = "!vtban"
+        cmd = bot.parse_for_command(msg, self.author)
+        self.assertEqual(cmd, bot.Commands.VTBAN)
+
 
 class testCommandParsingNoAdmin(unittest.TestCase):
     def setUp(self):
@@ -471,6 +523,11 @@ class testCommandParsingNoAdmin(unittest.TestCase):
 
     def test_parse_for_command__VTSilence_only(self):
         msg = "!vtsilence"
+        cmd = bot.parse_for_command(msg, self.author)
+        self.assertEqual(cmd, bot.Commands.NEEDADMIN)
+
+    def test_parse_for_command__VTBan_only(self):
+        msg = "!vtban"
         cmd = bot.parse_for_command(msg, self.author)
         self.assertEqual(cmd, bot.Commands.NEEDADMIN)
 
