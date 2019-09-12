@@ -7,7 +7,17 @@ The bot can be added to your server [here](https://discordapp.com/oauth2/authori
 
 I have a support discord set up [here](https://discord.gg/nUZsfYS).
 
-The bot provides a few commands: "!vthelp" which lists all available commands. "!vt" which will tell you how long the server has gone without mentioning the word "vore." "!vtsilence" for which the administrator permission is required, which will silence the bot while active. "!vtalert" which requires the administrator permission and unsilences the bot.
+The bot monitors all messages for a message like the word the server has banned (specifically, case-insensitive, accent-insensitive, ensuring there are word-breaks on either side of the phrase). The bot will reset the server's timer if it finds a message containing a match, and call the user out publically. After calling out one user, the bot will silently reset the counter until a customizable amount of time has passed.
 
-The bot also monitors all messages for a message like "vore" (specifically, case-insensitive, accent-insensitive, ensuring there are word-breaks on either side of the phrase), and will reset the server's counter if it finds a message containing a match after calling out the user publically. After calling out one user, the bot will silently reset the counter until a half hour has passed since its last callout (This may change to be admin configurable later).
+The default banned word is "vore", and the default timeout is half an hour.
+The bot provides a few commands which are available to all users: 
+* "!vthelp" - List all available commands.
+* "!vt" - Will list how long the server has gone without saying each currently banned word.
+* "!vtct" - Will list how long the timeout is set for, and when/if another issue can be issued for each banned word.
+* "!vtlast" - DEPRECATED, Will list how long it has been since a callout has been issued for each currently banned word.
 
+The bot also provides a few commands available only to server admins:
+* "!vtsilence" - Prevent the bot from sending messages calling out users.
+* "!vtalert" - Allow the bot to send messages to call out users.
+* "!vtban [word_to_ban]" - Change the currently banned word. For example, "!vtban bepis" will ban the word "bepis". If multiple words are mentioned, only the first one will be banned. 
+* "!vtdelay hh:mm:ss" - Change the bot's timeout for the server to the specified amount. For example, "!vtdelay 23:59:59" will set the minimum time between callouts to just under a full day.
