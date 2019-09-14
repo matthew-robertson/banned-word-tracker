@@ -1,7 +1,7 @@
-[![Build Status](https://travis-ci.com/matthew-robertson/banned-word-tracker.svg?branch=master)](https://travis-ci.com/matthew-robertson/banned-word-tracker)
+[![Build Status](https://travis-ci.com/matthew-robertson/banned-word-tracker.svg?branch=master)](https://travis-ci.com/matthew-robertson/banned-word-tracker) <a href="https://www.patreon.com/bePatron?u=19559602"><img alt="become a patron" src="https://c5.patreon.com/external/logo/become_a_patron_button.png" height="35px"></a>
 
-# vore-tracker
-A simple discord bot designed to keep track of however long a server can go without referencing vore.
+# banned-word-tracker
+A simple discord bot designed to keep track of however long a server can go without referencing a banned word.
 
 The bot can be added to your server [here](https://discordapp.com/oauth2/authorize?client_id=355144450437021697&scope=bot&permissions=3072).
 
