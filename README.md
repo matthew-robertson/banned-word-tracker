@@ -9,7 +9,7 @@ I have a support discord set up [here](https://discord.gg/nUZsfYS).
 
 The bot monitors all messages for a message like the word the server has banned (specifically, case-insensitive, accent-insensitive, ensuring there are word-breaks on either side of the phrase). The bot will reset the server's timer if it finds a message containing a match, and call the user out publically. After calling out one user, the bot will silently reset the counter until a customizable amount of time has passed.
 
-The default banned word is "vore", and the default timeout is half an hour.
+The default banned word is "defaultbannedword", and the default timeout is half an hour.
 The bot provides a few commands which are available to all users: 
 * "!vthelp" - List all available commands.
 * "!vt" - Will list how long the server has gone without saying each currently banned word.
