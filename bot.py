@@ -205,7 +205,8 @@ def handle_command(found_command, server_dao, current_time, current_server, bann
     return msg_to_send
 
 def detect_banned_word(message, banned_word):
-    pattern = confusable_regex(banned_word, True)
+    word_boundary_chars = '\\b'
+    pattern = word_boundary_chars + confusable_regex(banned_word, True) + word_boundary_chars
     if re.search(pattern, message) is not None:
         return True
     return False
