@@ -74,7 +74,7 @@ class ServerDao:
     c = self.conn.cursor()
     res = c.execute('INSERT INTO `server_banned_word` (server_id, banned_word, infracted_at, calledout_at) VALUES (?, ?, ?, ?)',
             (server_id,
-             'vore',
+             'defaultbannedword',
              join_time.strftime("%Y-%m-%d %H:%M:%S"),
              (join_time - datetime.timedelta(minutes=60)).strftime("%Y-%m-%d %H:%M:%S")))
     self.conn.commit()
