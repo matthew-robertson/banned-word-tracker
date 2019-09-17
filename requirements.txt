@@ -2,7 +2,7 @@ aiohttp==3.5.4
 async-timeout==3.0.1
 attrs==19.1.0
 chardet==3.0.4
-confusables==0.4.0
+confusables==1.0.0
 discord.py==1.2.3
 idna==2.8
 idna-ssl==1.1.0
