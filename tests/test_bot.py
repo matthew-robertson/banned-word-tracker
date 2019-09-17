@@ -428,7 +428,7 @@ class testCommandParsingAdmin(unittest.TestCase):
         self.author = Mock(**{
                 'id': 2,
                 'mention': "@test",
-                'server_permissions': Mock(**{
+                'permissions_in.return_value': Mock(**{
                     'administrator': True
                     }),
                 'bot': False
@@ -436,57 +436,57 @@ class testCommandParsingAdmin(unittest.TestCase):
 
     def test_parse_for_command__VT(self):
         msg = "!vt"
-        cmd = bot.parse_for_command(msg, self.author)
+        cmd = bot.parse_for_command(msg, self.author, 1)
         self.assertEqual(cmd, bot.Commands.VT)
 
     def test_parse_for_command__VTSilence_only(self):
         msg = "!vtsilence"
-        cmd = bot.parse_for_command(msg, self.author)
+        cmd = bot.parse_for_command(msg, self.author, 1)
         self.assertEqual(cmd, bot.Commands.VTSILENCE)
 
     def test_parse_for_command__VTSilence_typo(self):
         msg = "!vtsience"
-        cmd = bot.parse_for_command(msg, self.author)
+        cmd = bot.parse_for_command(msg, self.author, 1)
         self.assertNotEqual(cmd, bot.Commands.VTSILENCE)
 
     def test_parse_for_command__VTSilence_after(self):
         msg = "!vtsilence test"
-        cmd = bot.parse_for_command(msg, self.author)
+        cmd = bot.parse_for_command(msg, self.author, 1)
         self.assertEqual(cmd, bot.Commands.VTSILENCE)
 
     def test_parse_for_command__VTAlert_only(self):
         msg = "!vtalert"
-        cmd = bot.parse_for_command(msg, self.author)
+        cmd = bot.parse_for_command(msg, self.author, 1)
         self.assertEqual(cmd, bot.Commands.VTALERT)
 
     def test_parse_for_command__VTSilence_typo(self):
         msg = "!vtaert"
-        cmd = bot.parse_for_command(msg, self.author)
+        cmd = bot.parse_for_command(msg, self.author, 1)
         self.assertNotEqual(cmd, bot.Commands.VTALERT)
 
     def test_parse_for_command__VTSilence_after(self):
         msg = "!vtalert test"
-        cmd = bot.parse_for_command(msg, self.author)
+        cmd = bot.parse_for_command(msg, self.author, 1)
         self.assertEqual(cmd, bot.Commands.VTALERT)
 
     def test_parse_for_command__VTHelp_only(self):
         msg = "!vthelp"
-        cmd = bot.parse_for_command(msg, self.author)
+        cmd = bot.parse_for_command(msg, self.author, 1)
         self.assertEqual(cmd, bot.Commands.VTHELP)
 
     def test_parse_for_command__VTLast_only(self):
         msg = "!vtlast"
-        cmd = bot.parse_for_command(msg, self.author)
+        cmd = bot.parse_for_command(msg, self.author, 1)
         self.assertEqual(cmd, bot.Commands.VTLAST)
 
     def test_parse_for_command__VTCT_only(self):
         msg = "!vtct"
-        cmd = bot.parse_for_command(msg, self.author)
+        cmd = bot.parse_for_command(msg, self.author, 1)
         self.assertEqual(cmd, bot.Commands.VTCT)
 
     def test_parse_for_command__VTBan_only(self):
         msg = "!vtban"
-        cmd = bot.parse_for_command(msg, self.author)
+        cmd = bot.parse_for_command(msg, self.author, 1)
         self.assertEqual(cmd, bot.Commands.VTBAN)
 
 
@@ -495,7 +495,7 @@ class testCommandParsingNoAdmin(unittest.TestCase):
         self.author = Mock(**{
                 'id': 2,
                 'mention': "@test",
-                'server_permissions': Mock(**{
+                'permissions_in.return_value': Mock(**{
                     'administrator': False
                     }),
                 'bot': False
@@ -503,45 +503,45 @@ class testCommandParsingNoAdmin(unittest.TestCase):
 
     def test_parse_for_command__VT_only(self):
         msg = "!vt"
-        cmd = bot.parse_for_command(msg, self.author)
+        cmd = bot.parse_for_command(msg, self.author, 1)
         self.assertEqual(cmd, bot.Commands.VT)
 
     def test_parse_for_command__VT_after(self):
         msg = "test !vt"
-        cmd = bot.parse_for_command(msg, self.author)
+        cmd = bot.parse_for_command(msg, self.author, 1)
         self.assertEqual(cmd, bot.Commands.NOCOMMAND)
 
     def test_parse_for_command__VT_before(self):
         msg = "!vt testing"
-        cmd = bot.parse_for_command(msg, self.author)
+        cmd = bot.parse_for_command(msg, self.author, 1)
         self.assertEqual(cmd, bot.Commands.VT)
 
     def test_parse_for_command__VTAlert_only(self):
         msg = "!vtalert"
-        cmd = bot.parse_for_command(msg, self.author)
+        cmd = bot.parse_for_command(msg, self.author, 1)
         self.assertEqual(cmd, bot.Commands.NEEDADMIN)
 
     def test_parse_for_command__VTSilence_only(self):
         msg = "!vtsilence"
-        cmd = bot.parse_for_command(msg, self.author)
+        cmd = bot.parse_for_command(msg, self.author, 1)
         self.assertEqual(cmd, bot.Commands.NEEDADMIN)
 
     def test_parse_for_command__VTBan_only(self):
         msg = "!vtban"
-        cmd = bot.parse_for_command(msg, self.author)
+        cmd = bot.parse_for_command(msg, self.author, 1)
         self.assertEqual(cmd, bot.Commands.NEEDADMIN)
 
     def test_parse_for_command__VTHelp_only(self):
         msg = "!vthelp"
-        cmd = bot.parse_for_command(msg, self.author)
+        cmd = bot.parse_for_command(msg, self.author, 1)
         self.assertEqual(cmd, bot.Commands.VTHELP)
 
     def test_parse_for_command__VTLast_only(self):
         msg = "!vtlast"
-        cmd = bot.parse_for_command(msg, self.author)
+        cmd = bot.parse_for_command(msg, self.author, 1)
         self.assertEqual(cmd, bot.Commands.VTLAST)
 
     def test_parse_for_command__VTCT_only(self):
         msg = "!vtct"
-        cmd = bot.parse_for_command(msg, self.author)
+        cmd = bot.parse_for_command(msg, self.author, 1)
         self.assertEqual(cmd, bot.Commands.VTCT)
