@@ -78,10 +78,10 @@ def format_time(current_time, pastTime):
     return dt+ht+mt+st
 
 # Only returns a command if the command is in the message and also valid
-def parse_for_command(msg, msg_author):
+def parse_for_command(msg, msg_author, channel):
     # Check if any admin only commands have been entered
-    if (hasattr(msg_author, 'server_permissions')):
-        permission = msg_author.server_permissions
+    if (hasattr(msg_author, 'permissions_in')):
+        permission = msg_author.permissions_in(channel)
         if msg.startswith('!vtsilence') and permission.administrator:
             return Commands.VTSILENCE            
         elif msg.startswith('!vtalert') and permission.administrator:
@@ -231,19 +231,15 @@ def handle_detected_banned_word(server_dao, current_time, current_server, messag
 
 
 def handle_message(server_dao, message, botID, current_time):
-    if not message.server or message.author.bot:
+    if not message.guild or message.author.bot:
         return ""
 
-    server_id = message.server.id
+    server_id = message.guild.id
     current_server = server_dao.get_server(server_id)
     if current_server is None:
         current_server = {}
         current_server['server_id'] = server_id
-        bot = None
-        for x in message.server.members:
-            if botID == x.id:
-                bot = x
-                break
+        bot = message.guild.get_member(botID)
 
         fromUTC = datetime.datetime.now() - datetime.datetime.utcnow()
         current_server['awake'] = True
@@ -253,7 +249,7 @@ def handle_message(server_dao, message, botID, current_time):
 
     banned_words = server_dao.get_banned_words_for_server(server_id)
 
-    found_command = parse_for_command(message.content, message.author)
+    found_command = parse_for_command(message.content, message.author, message.channel)
     msg_to_send = handle_command(found_command, server_dao, current_time, current_server, banned_words, message)
 
     # Check if they've said the forbidden word
@@ -286,12 +282,12 @@ def run_bot(conn, shard_id, shard_count, client_key):
     async def on_message_edit(before, message):
         msg_to_send = handle_message(server_dao, message, client.user.id, datetime.datetime.now())    
         if len(msg_to_send):
-            await client.send_message(message.channel, msg_to_send)
+            await message.channel.send(msg_to_send)
 
     @client.event
     async def on_message(message):
         msg_to_send = handle_message(server_dao, message, client.user.id, datetime.datetime.now())    
         if msg_to_send:
-            await client.send_message(message.channel, msg_to_send)
+            await message.channel.send(msg_to_send)
 
     client.run(client_key)
