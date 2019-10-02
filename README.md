@@ -1,4 +1,8 @@
-[![Build Status](https://travis-ci.com/matthew-robertson/banned-word-tracker.svg?branch=master)](https://travis-ci.com/matthew-robertson/banned-word-tracker) <a href="https://www.patreon.com/bePatron?u=19559602"><img alt="become a patron" src="https://c5.patreon.com/external/logo/become_a_patron_button.png" height="35px"></a>
+
+[![Discord Bots](https://top.gg/api/widget/status/355144450437021697.svg)](https://top.gg/bot/355144450437021697)
+[![Build Status](https://travis-ci.com/matthew-robertson/banned-word-tracker.svg?branch=master)](https://travis-ci.com/matthew-robertson/banned-word-tracker)
+<a href="https://www.patreon.com/bePatron?u=19559602"><img alt="become a patron" src="https://c5.patreon.com/external/logo/become_a_patron_button.png" height="35px"></a>
+
 
 # banned-word-tracker
 A simple discord bot designed to keep track of however long a server can go without referencing a banned word.
