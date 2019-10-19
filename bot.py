@@ -2,6 +2,7 @@ import asyncio
 import datetime
 import discord
 from enum import Enum
+import json
 import math
 import re
 import time
@@ -107,14 +108,12 @@ def parse_for_command(msg, msg_author, channel):
 
 def handle_vtsilence(server_dao, current_server, msg_author):
     msg_to_send = "Ok {}, I'll be quiet now. use '!vtalert' to wake me back up!".format(msg_author.mention)
-    current_server['awake'] = False
-    server_dao.insert_server(current_server)
+    server_dao.update_server(current_server['server_id'], {'awake': False})
     return msg_to_send
 
 def handle_vtalert(server_dao, current_server, msg_author):
     msg_to_send = "Ok {}, I'm scanning now.".format(msg_author.mention)
-    current_server['awake'] = True
-    server_dao.insert_server(current_server)
+    server_dao.update_server(current_server['server_id'], {'awake': True})
     return msg_to_send
 
 def handle_vtban(server_dao, current_time, banned_words, new_word, msg_author, timeout_length):
@@ -132,8 +131,7 @@ def handle_vtdelay(server_dao, current_server, time_string):
     parsed_time = parse_time(time_string)
 
     if parsed_time >= 0:
-        current_server['timeout_duration_seconds'] = parsed_time
-        server_dao.insert_server(current_server)
+        server_dao.update_server(current_server['server_id'], {'timeout_duration_seconds': parsed_time})
         formatted_time = format_seconds(parsed_time)
         return "Cool, from now on I'll wait at least {} between alerts.".format(formatted_time)
     else:
@@ -219,13 +217,14 @@ def handle_detected_banned_word(server_dao, current_time, current_server, messag
     banned_word['infracted_at'] = current_time
 
     msg_to_send = ""
+    called_out = False
     if (current_server['awake'] and not is_cooldown_active):
-        banned_word['calledout_at'] = current_time
+        called_out = True
         msg_to_send = "{} referenced a forbidden word, setting its counter back to 0.\n".format(message.author.mention)
         msg_to_send += "I'll wait {} before warning you for this word again.\n".format(timeout_length)
         msg_to_send += "The server went {} without mentioning the forbidden word '{}'.".format(time_lasted, banned_word['banned_word'])
 
-    server_dao.update_banned_word(banned_word)
+    server_dao.send_infringing_message(banned_word['rowid'], called_out)
     print("{}::: {} lasted {} seconds.".format(current_time, current_server['server_id'], (tDiff).total_seconds()))
     return msg_to_send
 
@@ -238,15 +237,7 @@ def handle_message(server_dao, message, botID, current_time):
     server_id = message.guild.id
     current_server = server_dao.get_server(server_id)
     if current_server is None:
-        current_server = {}
-        current_server['server_id'] = server_id
-        bot = message.guild.get_member(botID)
-
-        fromUTC = datetime.datetime.now() - datetime.datetime.utcnow()
-        current_server['awake'] = True
-        current_server['timeout_duration_seconds'] = 1800
-        server_dao.insert_server(current_server)
-        server_dao.insert_default_banned_word(server_id, bot.joined_at + fromUTC)
+        server_dao.insert_default_server(server_id)
 
     banned_words = server_dao.get_banned_words_for_server(server_id)
 
@@ -268,9 +259,9 @@ def handle_message(server_dao, message, botID, current_time):
         msg_to_send += "\n"
     return msg_to_send + banned_word_msg
 
-def run_bot(conn, shard_id, shard_count, client_key):
+def run_bot(shard_id, shard_count, client_key):
     client = discord.Client(shard_id=shard_id, shard_count=shard_count)
-    server_dao = ServerDao(conn)
+    server_dao = ServerDao()
 
     @client.event
     async def on_ready():
