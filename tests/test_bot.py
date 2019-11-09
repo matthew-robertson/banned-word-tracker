@@ -1,41 +1,46 @@
 import unittest
 import datetime
 from unittest.mock import Mock, patch
+from types import MethodType
 
 import bot
+from serverobjects.server import DiscordServer
+from serverobjects.ban import BanInstance
+from config import API_BASE_URL
 
+@patch.object(DiscordServer, 'update_server_settings')
+@patch.object(BanInstance, 'send_infringing_message')
 class TestAwakeNoCooldownBot(unittest.TestCase):
-    def setUp(self):
-        self.current_time = datetime.datetime.now()
-        self.current_server = {
+    def simple_server(server, time):
+        current_server = {
             'server_id' : 1,
             'awake' : True,
-            'timeout_duration_seconds': 1800
+            'timeout_duration_seconds': 1800,
+            'banned_words': [{
+                'rowid': 1,
+                'server_id': 1,
+                'banned_word': 'vore',
+                'infracted_at': (time - datetime.timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S"),
+                'calledout_at': (time - datetime.timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S")
+            },
+            {
+                'rowid': 2,
+                'server_id': 2,
+                'banned_word': 'bepis',
+                'infracted_at': (time - datetime.timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S"),
+                'calledout_at': (time - datetime.timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S")
+            }]
         }
-        self.banned_words = [{
-            'rowid': 1,
-            'server_id': 1,
-            'banned_word': 'vore',
-            'infracted_at': self.current_time - datetime.timedelta(minutes=30),
-            'calledout_at': self.current_time - datetime.timedelta(minutes=30)
-        },
-        {
-            'rowid': 2,
-            'server_id': 2,
-            'banned_word': 'bepis',
-            'infracted_at': self.current_time - datetime.timedelta(minutes=30),
-            'calledout_at': self.current_time - datetime.timedelta(minutes=30)
-        }]
-        self.server_dao = Mock(**{
-            'get_server.return_value': self.current_server,
-            'get_banned_words_for_server.return_value': self.banned_words,
-            'insert_server.return_value': None
-        })
+        return DiscordServer(current_server, time)
+
+    def setUp(self):
+        self.current_time = datetime.datetime.now()
         self.infringedString = "@test referenced a forbidden word, setting its counter back to 0.\n"
         self.infringedString += "I'll wait 30 minutes and 0 seconds before warning you for this word again.\n"
         self.infringedString += "The server went 30 minutes and 0 seconds without mentioning the forbidden word 'vore'."
 
-    def test_handle_message__different_word(self):
+    @patch('bot.fetch_server_from_api', side_effect=simple_server)
+    def test_handle_message__different_word(self, sPostMock, bPostMock, fetchMock):
         message = Mock(**{
             'server': Mock(**{
                 'id': 1
@@ -48,14 +53,15 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
             }),
         })
 
-        message_to_send = bot.handle_message(self.server_dao, message, 1, self.current_time)
+        message_to_send = bot.handle_message(message, 1, self.current_time)
 
         infringedString = "@test referenced a forbidden word, setting its counter back to 0.\n"
         infringedString += "I'll wait 30 minutes and 0 seconds before warning you for this word again.\n"
         infringedString += "The server went 30 minutes and 0 seconds without mentioning the forbidden word 'bepis'."
         self.assertEqual(message_to_send, infringedString)
 
-    def test_handle_message__valid_post(self):
+    @patch('bot.fetch_server_from_api', side_effect=simple_server)
+    def test_handle_message__valid_post(self, sPostMock, bPostMock, fetchMock):
         message = Mock(**{
             'server': Mock(**{
                 'id': 1
@@ -68,10 +74,11 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
             }),
         })
 
-        message_to_send = bot.handle_message(self.server_dao, message, 1, self.current_time)
+        message_to_send = bot.handle_message(message, 1, self.current_time)
         self.assertFalse(message_to_send)
 
-    def test_handle_message__infringing_post_only(self):
+    @patch('bot.fetch_server_from_api', side_effect=simple_server)
+    def test_handle_message__infringing_post_only(self, sPostMock, bPostMock, fetchMock):
         message = Mock(**{
             'server': Mock(**{
                 'id': 1
@@ -84,10 +91,11 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
             }),
         })
 
-        message_to_send = bot.handle_message(self.server_dao, message, 1, self.current_time)
+        message_to_send = bot.handle_message(message, 1, self.current_time)
         self.assertEqual(message_to_send, self.infringedString)
 
-    def test_handle_message__infringing_post_embedded(self):
+    @patch('bot.fetch_server_from_api', side_effect=simple_server)
+    def test_handle_message__infringing_post_embedded(self, sPostMock, bPostMock, fetchMock):
         message = Mock(**{
             'server': Mock(**{
                 'id': 1
@@ -100,10 +108,11 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
             }),
         })
 
-        message_to_send = bot.handle_message(self.server_dao, message, 1, self.current_time)
+        message_to_send = bot.handle_message(message, 1, self.current_time)
         self.assertEqual(message_to_send, self.infringedString)
 
-    def test_handle_message__infringing_post_from_bot(self):
+    @patch('bot.fetch_server_from_api', side_effect=simple_server)
+    def test_handle_message__infringing_post_from_bot(self, sPostMock, bPostMock, fetchMock):
         message = Mock(**{
             'server': Mock(**{
                 'id': 1
@@ -116,10 +125,11 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
             }),
         })
 
-        message_to_send = bot.handle_message(self.server_dao, message, 1, self.current_time)
+        message_to_send = bot.handle_message(message, 1, self.current_time)
         self.assertFalse(message_to_send)
 
-    def test_handle_message__infringing_post_embedded_hyphen(self):
+    @patch('bot.fetch_server_from_api', side_effect=simple_server)
+    def test_handle_message__infringing_post_embedded_hyphen(self, sPostMock, bPostMock, fetchMock):
         message = Mock(**{
             'server': Mock(**{
                 'id': 1
@@ -132,10 +142,11 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
             }),
         })
 
-        message_to_send = bot.handle_message(self.server_dao, message, 1, self.current_time)
+        message_to_send = bot.handle_message(message, 1, self.current_time)
         self.assertEqual(message_to_send, self.infringedString)
 
-    def test_handle_message__infringing_post_formatting(self):
+    @patch('bot.fetch_server_from_api', side_effect=simple_server)
+    def test_handle_message__infringing_post_formatting(self, sPostMock, bPostMock, fetchMock):
         message1 = Mock(**{
             'server': Mock(**{
                 'id': 1
@@ -172,14 +183,15 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
             }),
         })
 
-        message_to_send1 = bot.handle_message(self.server_dao, message1, 1, self.current_time)
+        message_to_send1 = bot.handle_message(message1, 1, self.current_time)
         self.assertEqual(message_to_send1, self.infringedString)
-        message_to_send2 = bot.handle_message(self.server_dao, message2, 1, self.current_time)
+        message_to_send2 = bot.handle_message(message2, 1, self.current_time)
         self.assertEqual(message_to_send1, self.infringedString)
-        message_to_send3 = bot.handle_message(self.server_dao, message3, 1, self.current_time)
+        message_to_send3 = bot.handle_message(message3, 1, self.current_time)
         self.assertEqual(message_to_send1, self.infringedString)
 
-    def test_handle_message__infringing_post_unicode(self):
+    @patch('bot.fetch_server_from_api', side_effect=simple_server)
+    def test_handle_message__infringing_post_unicode(self, sPostMock, bPostMock, fetchMock):
         message1 = Mock(**{
             'server': Mock(**{
                 'id': 1
@@ -216,34 +228,36 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
             }),
         })
 
-        message_to_send1 = bot.handle_message(self.server_dao, message1, 1, self.current_time)
+        message_to_send1 = bot.handle_message(message1, 1, self.current_time)
         self.assertEqual(message_to_send1, self.infringedString)
-        message_to_send2 = bot.handle_message(self.server_dao, message2, 1, self.current_time)
+        message_to_send2 = bot.handle_message(message2, 1, self.current_time)
         self.assertEqual(message_to_send1, self.infringedString)
-        message_to_send3 = bot.handle_message(self.server_dao, message3, 1, self.current_time)
+        message_to_send3 = bot.handle_message(message3, 1, self.current_time)
         self.assertEqual(message_to_send1, self.infringedString)
 
+@patch.object(DiscordServer, 'update_server_settings')
+@patch.object(BanInstance, 'send_infringing_message')
 class TestAwakeCooldownBot(unittest.TestCase):
-    def setUp(self):
-        self.current_time = datetime.datetime.now()
-        self.current_server = {
+    def simple_server(server, time):
+        current_server = {
             'server_id' : 1,
             'awake' : True,
-            'timeout_duration_seconds': 1800
+            'timeout_duration_seconds': 1800,
+            'banned_words': [{
+                'rowid': 1,
+                'server_id': 1,
+                'banned_word': 'vore',
+                'infracted_at': (time - datetime.timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S"),
+                'calledout_at': (time - datetime.timedelta(minutes=20)).strftime("%Y-%m-%d %H:%M:%S")
+            }]
         }
-        self.banned_words = [{
-            'rowid': 1,
-            'server_id': 1,
-            'banned_word': 'vore',
-            'infracted_at': self.current_time - datetime.timedelta(minutes=30),
-            'calledout_at': self.current_time - datetime.timedelta(minutes=20)
-        }]
-        self.server_dao = Mock(**{
-            'get_server.return_value': self.current_server,
-            'get_banned_words_for_server.return_value': self.banned_words,
-            'insert_server.return_value': None
-        })
-    def test_handle_message__infringing_post(self):
+        return DiscordServer(current_server, time)
+
+    def setUp(self):
+        self.current_time = datetime.datetime.now()
+
+    @patch('bot.fetch_server_from_api', side_effect=simple_server)
+    def test_handle_message__infringing_post(self, sPostMock, bPostMock, fetchMock):
         message = Mock(**{
             'server': Mock(**{
                 'id': 1
@@ -255,33 +269,33 @@ class TestAwakeCooldownBot(unittest.TestCase):
                 'bot': False
             }),
         })
-        message_to_send = bot.handle_message(self.server_dao, message, 1, self.current_time)
+        message_to_send = bot.handle_message(message, 1, self.current_time)
 
         self.assertEqual(message_to_send, '')
 
+@patch.object(DiscordServer, 'update_server_settings')
+@patch.object(BanInstance, 'send_infringing_message')
 class TestAsleepBot(unittest.TestCase):
+    def simple_server(server, time):
+        current_server = {
+            'server_id' : 1,
+            'awake' : False,
+            'timeout_duration_seconds': 1800,
+            'banned_words': [{
+                'rowid': 1,
+                'server_id': 1,
+                'banned_word': 'vore',
+                'infracted_at': (time - datetime.timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S"),
+                'calledout_at': (time - datetime.timedelta(minutes=40)).strftime("%Y-%m-%d %H:%M:%S")
+            }]
+        }
+        return DiscordServer(current_server, time)
+
     def setUp(self):
         self.current_time = datetime.datetime.now()
-        self.current_server = {
-            'server_id' : 1,
-            'infracted_at': self.current_time - datetime.timedelta(minutes=30),
-            'calledout_at': self.current_time - datetime.timedelta(minutes=40),
-            'awake' : False,
-            'timeout_duration_seconds': 1800
-        }
-        self.banned_words = [{
-            'rowid': 1,
-            'server_id': 1,
-            'banned_word': 'vore',
-            'infracted_at': self.current_time - datetime.timedelta(minutes=30),
-            'calledout_at': self.current_time - datetime.timedelta(minutes=30)
-        }]
-        self.server_dao = Mock(**{
-            'get_server.return_value': self.current_server,
-            'get_banned_words_for_server.return_value': self.banned_words,
-            'insert_server.return_value': None
-        })
-    def test_handle_message__infringing_post(self):
+
+    @patch('bot.fetch_server_from_api', side_effect=simple_server)
+    def test_handle_message__infringing_post(self, sPostMock, bPostMock, fetchMock):
         message = Mock(**{
             'server': Mock(**{
                 'id': 1
@@ -293,7 +307,7 @@ class TestAsleepBot(unittest.TestCase):
                 'bot': False
             }),
         })
-        message_to_send = bot.handle_message(self.server_dao, message, 1, self.current_time)
+        message_to_send = bot.handle_message(message, 1, self.current_time)
 
         self.assertEqual(message_to_send, '')
 
