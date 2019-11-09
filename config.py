@@ -1,3 +1,2 @@
-DB_LOCATION = ''
-
+API_BASE_URL = ''
 CLIENT_KEY = ''
