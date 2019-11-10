@@ -46,7 +46,7 @@ class BanInstance:
       self.infracted_at = datetime.datetime.strptime(jData['infracted_at'], "%Y-%m-%d %H:%M:%S")
 
   def check_if_message_infringes(self, message):
-    word_boundary_chars = '\\b'
+    word_boundary_chars = '(?:^|$|\\s|\\b)'
     pattern = word_boundary_chars + confusable_regex(self.banned_word, True) + word_boundary_chars
     if re.search(pattern, message) is not None:
       return True
