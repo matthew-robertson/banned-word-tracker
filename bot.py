@@ -164,11 +164,8 @@ def handle_vtct(current_time, current_server):
 
 def handle_vthelp():
     msg_to_send = "You can ask me how long we've made it with '!vt'.\n"
-    msg_to_send += "You can learn how long it's been since my last warning with '!vtlast'.\n"
     msg_to_send += "You can learn how long my timeout is set for, and when I can issue another warning with '!vtct'.\n"
-    msg_to_send += "If you're an admin, you can silence me with '!vtsilence' or wake me back up with '!vtalert'.\n"
-    msg_to_send += "If you're an admin, you can use '!vtdelay hh:mm:ss` to set the length of the timeout.\n"
-    msg_to_send += "If you're an admin, you can use '!vtban word_to_ban' to change the banned word for the server.\n"
+    msg_to_send += "For other commands, server management, and general help, please check either the documentation (https://bwbdiscord.gitbook.io/banned-word-tracker/) or the support server (https://discord.gg/nUZsfYS)."
     return msg_to_send
 
 def handle_vtlast(current_time, current_server):
@@ -190,7 +187,6 @@ def handle_vt(current_time, current_server):
         timeLasted = format_time(current_time, banned_word.infracted_at)
         msg_to_send += "\nThe server has gone {} without mentioning '{}'.".format(timeLasted, banned_word.banned_word)
 
-    msg_to_send += "\nAs a new feature, server administrators are able to change the banned word using !vtban."
     return msg_to_send
 
 def handle_command(found_command, current_time, current_server, message):
@@ -266,6 +262,7 @@ def run_bot(shard_id, shard_count, client_key):
         print(client.user.name)
         print(client.user.id)
         print("------")
+        await client.change_presence(activity = discord.Game(name = 'Use !vthelp'))
 
     @client.event
     async def on_message_edit(before, message):
