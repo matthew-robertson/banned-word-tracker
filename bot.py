@@ -261,6 +261,7 @@ def run_bot(shard_id, shard_count, client_key):
         print("Logged in as")
         print(client.user.name)
         print(client.user.id)
+        print("On {} servers".format(len(client.guilds)))
         print("------")
         await client.change_presence(activity = discord.Game(name = 'Use !vthelp'))
 
