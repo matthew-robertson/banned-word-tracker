@@ -7,7 +7,8 @@ import requests
 from config import API_BASE_URL, CLIENT_KEY
 
 class BanInstance:
-  def __init__(self, banJson, current_time, timeout_duration):
+  def __init__(self, banJson, current_time, timeout_duration, session=requests.Session()):
+    self._session = session
     self.ban_id = banJson['rowid']
     self.banned_word = banJson['banned_word']
     self.calledout_at = datetime.datetime.strptime(banJson['calledout_at'], "%Y-%m-%d %H:%M:%S")
@@ -18,7 +19,7 @@ class BanInstance:
     self.timeout_expiration_time = self.calledout_at + datetime.timedelta(seconds=timeout_duration)
 
   def set_word(self, new_word):
-    response = requests.post(
+    response = self._session.post(
       API_BASE_URL + 'v1/servers/' + str(self.server_id) + '/bans/' + str(self.ban_id) , 
       headers = {'Authorization': 'Bot ' + CLIENT_KEY},
       json = {'banned_word': new_word})
@@ -34,7 +35,7 @@ class BanInstance:
     if called_out:
       requestData['called_out'] = True
 
-    response = requests.post(
+    response = self._session.post(
       API_BASE_URL + 'v1/messages', 
       headers = {'Authorization': 'Bot ' + CLIENT_KEY},
       json = requestData)
