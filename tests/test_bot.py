@@ -11,7 +11,7 @@ from config import API_BASE_URL
 @patch.object(DiscordServer, 'update_server_settings')
 @patch.object(BanInstance, 'send_infringing_message')
 class TestAwakeNoCooldownBot(unittest.TestCase):
-    def simple_server(server, time):
+    def simple_server(server, time, session):
         current_server = {
             'server_id' : 1,
             'awake' : True,
@@ -31,7 +31,7 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
                 'calledout_at': (time - datetime.timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S")
             }]
         }
-        return DiscordServer(current_server, time)
+        return DiscordServer(current_server, time, None)
 
     def setUp(self):
         self.current_time = datetime.datetime.now()
@@ -53,7 +53,7 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
             }),
         })
 
-        message_to_send = bot.handle_message(message, 1, self.current_time)
+        message_to_send = bot.handle_message(message, self.current_time, None)
 
         infringedString = "@test referenced a forbidden word, setting its counter back to 0.\n"
         infringedString += "I'll wait 30 minutes and 0 seconds before warning you for this word again.\n"
@@ -74,7 +74,7 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
             }),
         })
 
-        message_to_send = bot.handle_message(message, 1, self.current_time)
+        message_to_send = bot.handle_message(message, self.current_time, None)
         self.assertFalse(message_to_send)
 
     @patch('bot.fetch_server_from_api', side_effect=simple_server)
@@ -91,7 +91,7 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
             }),
         })
 
-        message_to_send = bot.handle_message(message, 1, self.current_time)
+        message_to_send = bot.handle_message(message, self.current_time, None)
         self.assertEqual(message_to_send, self.infringedString)
 
     @patch('bot.fetch_server_from_api', side_effect=simple_server)
@@ -108,7 +108,7 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
             }),
         })
 
-        message_to_send = bot.handle_message(message, 1, self.current_time)
+        message_to_send = bot.handle_message(message, self.current_time, None)
         self.assertEqual(message_to_send, self.infringedString)
 
     @patch('bot.fetch_server_from_api', side_effect=simple_server)
@@ -125,7 +125,7 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
             }),
         })
 
-        message_to_send = bot.handle_message(message, 1, self.current_time)
+        message_to_send = bot.handle_message(message, self.current_time, None)
         self.assertFalse(message_to_send)
 
     @patch('bot.fetch_server_from_api', side_effect=simple_server)
@@ -142,7 +142,7 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
             }),
         })
 
-        message_to_send = bot.handle_message(message, 1, self.current_time)
+        message_to_send = bot.handle_message(message, self.current_time, None)
         self.assertEqual(message_to_send, self.infringedString)
 
     @patch('bot.fetch_server_from_api', side_effect=simple_server)
@@ -183,11 +183,11 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
             }),
         })
 
-        message_to_send1 = bot.handle_message(message1, 1, self.current_time)
+        message_to_send1 = bot.handle_message(message1, self.current_time, None)
         self.assertEqual(message_to_send1, self.infringedString)
-        message_to_send2 = bot.handle_message(message2, 1, self.current_time)
+        message_to_send2 = bot.handle_message(message2, self.current_time, None)
         self.assertEqual(message_to_send1, self.infringedString)
-        message_to_send3 = bot.handle_message(message3, 1, self.current_time)
+        message_to_send3 = bot.handle_message(message3, self.current_time, None)
         self.assertEqual(message_to_send1, self.infringedString)
 
     @patch('bot.fetch_server_from_api', side_effect=simple_server)
@@ -228,17 +228,17 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
             }),
         })
 
-        message_to_send1 = bot.handle_message(message1, 1, self.current_time)
+        message_to_send1 = bot.handle_message(message1, self.current_time, None)
         self.assertEqual(message_to_send1, self.infringedString)
-        message_to_send2 = bot.handle_message(message2, 1, self.current_time)
+        message_to_send2 = bot.handle_message(message2, self.current_time, None)
         self.assertEqual(message_to_send1, self.infringedString)
-        message_to_send3 = bot.handle_message(message3, 1, self.current_time)
+        message_to_send3 = bot.handle_message(message3, self.current_time, None)
         self.assertEqual(message_to_send1, self.infringedString)
 
 @patch.object(DiscordServer, 'update_server_settings')
 @patch.object(BanInstance, 'send_infringing_message')
 class TestAwakeCooldownBot(unittest.TestCase):
-    def simple_server(server, time):
+    def simple_server(server, time, session):
         current_server = {
             'server_id' : 1,
             'awake' : True,
@@ -251,7 +251,7 @@ class TestAwakeCooldownBot(unittest.TestCase):
                 'calledout_at': (time - datetime.timedelta(minutes=20)).strftime("%Y-%m-%d %H:%M:%S")
             }]
         }
-        return DiscordServer(current_server, time)
+        return DiscordServer(current_server, time, None)
 
     def setUp(self):
         self.current_time = datetime.datetime.now()
@@ -269,14 +269,14 @@ class TestAwakeCooldownBot(unittest.TestCase):
                 'bot': False
             }),
         })
-        message_to_send = bot.handle_message(message, 1, self.current_time)
+        message_to_send = bot.handle_message(message, self.current_time, None)
 
         self.assertEqual(message_to_send, '')
 
 @patch.object(DiscordServer, 'update_server_settings')
 @patch.object(BanInstance, 'send_infringing_message')
 class TestAsleepBot(unittest.TestCase):
-    def simple_server(server, time):
+    def simple_server(server, time, session):
         current_server = {
             'server_id' : 1,
             'awake' : False,
@@ -289,7 +289,7 @@ class TestAsleepBot(unittest.TestCase):
                 'calledout_at': (time - datetime.timedelta(minutes=40)).strftime("%Y-%m-%d %H:%M:%S")
             }]
         }
-        return DiscordServer(current_server, time)
+        return DiscordServer(current_server, time, None)
 
     def setUp(self):
         self.current_time = datetime.datetime.now()
@@ -307,7 +307,7 @@ class TestAsleepBot(unittest.TestCase):
                 'bot': False
             }),
         })
-        message_to_send = bot.handle_message(message, 1, self.current_time)
+        message_to_send = bot.handle_message(message, self.current_time, None)
 
         self.assertEqual(message_to_send, '')
 

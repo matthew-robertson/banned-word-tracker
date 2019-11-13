@@ -10,35 +10,35 @@ class TestCheckIfMessageInfringes(unittest.TestCase):
 		test_ban = BanInstance(
 			{	'rowid': 1, 'banned_word': 'test', 'calledout_at': '2019-11-11 11:11:11',	'infracted_at': '2019-11-11 11:11:11','server_id': 1234 },
 			datetime.datetime.now(),
-			0)
+			0, None)
 		self.assertTrue(test_ban.check_if_message_infringes('test'))
 
 	def test_check_if_message_infringes__embedded_match(self):
 		test_ban = BanInstance(
 			{	'rowid': 1, 'banned_word': 'test', 'calledout_at': '2019-11-11 11:11:11',	'infracted_at': '2019-11-11 11:11:11','server_id': 1234 },
 			datetime.datetime.now(),
-			0)
+			0, None)
 		self.assertTrue(test_ban.check_if_message_infringes('this is a test message.'))
 
 	def test_check_if_message_infringes__no_match(self):
 		test_ban = BanInstance(
 			{	'rowid': 1, 'banned_word': 'test', 'calledout_at': '2019-11-11 11:11:11',	'infracted_at': '2019-11-11 11:11:11','server_id': 1234 },
 			datetime.datetime.now(),
-			0)
+			0, None)
 		self.assertFalse(test_ban.check_if_message_infringes('this message does not infringe.'))
 
 	def test_check_if_message_infringes__word_embedded_in_other(self):
 		test_ban = BanInstance(
 			{	'rowid': 1, 'banned_word': 'vore', 'calledout_at': '2019-11-11 11:11:11',	'infracted_at': '2019-11-11 11:11:11','server_id': 1234 },
 			datetime.datetime.now(),
-			0)
+			0, None)
 		self.assertFalse(test_ban.check_if_message_infringes('omnivore'))
 
 	def test_check_if_message_infringes__at_mention_test(self):
 		test_ban = BanInstance(
 			{	'rowid': 1, 'banned_word': '<@12345>', 'calledout_at': '2019-11-11 11:11:11',	'infracted_at': '2019-11-11 11:11:11','server_id': 1234 },
 			datetime.datetime.now(),
-			0)
+			0, None)
 		self.assertTrue(test_ban.check_if_message_infringes(' <@12345> '))
 		self.assertTrue(test_ban.check_if_message_infringes('<@12345>'))
 
@@ -46,7 +46,7 @@ class TestCheckIfMessageInfringes(unittest.TestCase):
 		test_ban = BanInstance(
 			{	'rowid': 1, 'banned_word': 'vore', 'calledout_at': '2019-11-11 11:11:11',	'infracted_at': '2019-11-11 11:11:11','server_id': 1234 },
 			datetime.datetime.now(),
-			0)
+			0, None)
 		self.assertTrue(test_ban.check_if_message_infringes('vÒrË'))
 		self.assertTrue(test_ban.check_if_message_infringes('vᴑRè'))
 
@@ -54,7 +54,7 @@ class TestCheckIfMessageInfringes(unittest.TestCase):
 		test_ban = BanInstance(
 			{	'rowid': 1, 'banned_word': 'vore', 'calledout_at': '2019-11-11 11:11:11',	'infracted_at': '2019-11-11 11:11:11','server_id': 1234 },
 			datetime.datetime.now(),
-			0)
+			0, None)
 		self.assertTrue(test_ban.check_if_message_infringes('-v-o-r-e-'))
 		self.assertTrue(test_ban.check_if_message_infringes('**v**o**r**e**'))
 		self.assertTrue(test_ban.check_if_message_infringes('|||v||||o||||r||e|||'))
