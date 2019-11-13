@@ -7,7 +7,7 @@ import math
 import requests
 import time
 
-from config import API_BASE_URL, CLIENT_KEY
+from config import API_BASE_URL
 from serverobjects.server import DiscordServer
 
 class Commands(Enum):
@@ -22,20 +22,17 @@ class Commands(Enum):
     VTDELAY   = 7
     VTBAN     = 8
 
-def fetch_server_from_api(server_id, current_time):
-    response = requests.get(
-      API_BASE_URL + 'v1/servers/' + str(server_id),
-      headers = {'Authorization': 'Bot ' + CLIENT_KEY})
+def fetch_server_from_api(server_id, current_time, session):
+    response = session.get(API_BASE_URL + 'v1/servers/' + str(server_id))
 
     if (not response.ok):
-        response = requests.post(
+        response = session.post(
             API_BASE_URL + 'v1/servers', 
-            headers = {'Authorization': 'Bot ' + CLIENT_KEY},
             json = {'server_id': server_id})
     
     if (response.ok):
         jData = json.loads(response.content)
-        return DiscordServer(jData, current_time)
+        return DiscordServer(jData, current_time, session)
 
 def parse_time(time_string):
     splits = time_string.strip().split(':')
@@ -228,12 +225,12 @@ def handle_detected_banned_word(current_time, current_server, message, banned_wo
     print("{}::: {} lasted {} seconds.".format(current_time, current_server.server_id, (tDiff).total_seconds()))
     return msg_to_send
 
-def handle_message(message, botID, current_time):
+def handle_message(message, current_time, session):
     if not message.guild or message.author.bot:
         return ""
 
     server_id = message.guild.id
-    current_server = fetch_server_from_api(server_id, current_time)
+    current_server = fetch_server_from_api(server_id, current_time, session)
 
     found_command = parse_for_command(message.content, message.author, message.channel)
     msg_to_send = handle_command(found_command, current_time, current_server, message)
@@ -253,7 +250,7 @@ def handle_message(message, botID, current_time):
         msg_to_send += "\n"
     return msg_to_send + banned_word_msg
 
-def run_bot(shard_id, shard_count, client_key):
+def run_bot(shard_id, shard_count, client_key, session):
     client = discord.Client(shard_id=shard_id, shard_count=shard_count)
 
     @client.event
@@ -267,13 +264,13 @@ def run_bot(shard_id, shard_count, client_key):
 
     @client.event
     async def on_message_edit(before, message):
-        msg_to_send = handle_message(message, client.user.id, datetime.datetime.now())    
+        msg_to_send = handle_message(message, datetime.datetime.now(), session)    
         if len(msg_to_send):
             await message.channel.send(msg_to_send)
 
     @client.event
     async def on_message(message):
-        msg_to_send = handle_message(message, client.user.id, datetime.datetime.now())    
+        msg_to_send = handle_message(message, datetime.datetime.now(), session)    
         if msg_to_send:
             await message.channel.send(msg_to_send)
 

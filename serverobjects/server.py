@@ -5,7 +5,7 @@ from config import API_BASE_URL, CLIENT_KEY
 from serverobjects.ban import BanInstance
 
 class DiscordServer:
-	def __init__(self, server_data, current_time, session=requests.Session()):
+	def __init__(self, server_data, current_time, session):
 		self._session = session
 		self.server_id = int(server_data['server_id'])
 		self.awake = bool(server_data['awake'])
@@ -24,7 +24,6 @@ class DiscordServer:
 	def update_server_settings(self, updated_params):
 		response = self._session.post(
 			API_BASE_URL + 'v1/servers/' + str(self.server_id), 
-			headers = {'Authorization': 'Bot ' + CLIENT_KEY},
 			json = updated_params)
 
 		if (response.ok):

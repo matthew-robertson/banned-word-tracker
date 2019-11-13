@@ -7,7 +7,7 @@ import requests
 from config import API_BASE_URL, CLIENT_KEY
 
 class BanInstance:
-  def __init__(self, banJson, current_time, timeout_duration, session=requests.Session()):
+  def __init__(self, banJson, current_time, timeout_duration, session):
     self._session = session
     self.ban_id = banJson['rowid']
     self.banned_word = banJson['banned_word']
@@ -20,8 +20,7 @@ class BanInstance:
 
   def set_word(self, new_word):
     response = self._session.post(
-      API_BASE_URL + 'v1/servers/' + str(self.server_id) + '/bans/' + str(self.ban_id) , 
-      headers = {'Authorization': 'Bot ' + CLIENT_KEY},
+      API_BASE_URL + 'v1/servers/' + str(self.server_id) + '/bans/' + str(self.ban_id),
       json = {'banned_word': new_word})
 
     if (response.ok):
@@ -36,9 +35,7 @@ class BanInstance:
       requestData['called_out'] = True
 
     response = self._session.post(
-      API_BASE_URL + 'v1/messages', 
-      headers = {'Authorization': 'Bot ' + CLIENT_KEY},
-      json = requestData)
+      API_BASE_URL + 'v1/messages', json = requestData)
     
     if (response.ok):
       jData = json.loads(response.content)
