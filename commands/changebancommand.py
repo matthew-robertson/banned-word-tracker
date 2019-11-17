@@ -1,6 +1,9 @@
 from commands.command import Command
 
 class ChangeBanCommand(Command):
+	def __init__(self):
+		self.detect_bans_in_message = False
+
 	def is_command_authorized(self, permissions=None):
 		return permissions and permissions.administrator
 

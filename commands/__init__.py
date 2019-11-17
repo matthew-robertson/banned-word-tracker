@@ -5,3 +5,4 @@ from .silencecommand import SilenceCommand
 from .alertcommand import AlertCommand
 from .changebancommand import ChangeBanCommand
 from .changetimecommand import ChangeTimeCommand
+from .nocommand import NoCommand
