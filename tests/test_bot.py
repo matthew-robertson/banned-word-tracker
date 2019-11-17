@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 from types import MethodType
 
 import bot
+from commands import TimerCommand, CooldownCommand, HelpCommand, SilenceCommand, AlertCommand, ChangeBanCommand, ChangeTimeCommand, NoCommand
 from serverobjects.server import DiscordServer
 from serverobjects.ban import BanInstance
 from config import API_BASE_URL
@@ -311,9 +312,33 @@ class TestAsleepBot(unittest.TestCase):
 
         self.assertEqual(message_to_send, '')
 
-class testCommandParsingAdmin(unittest.TestCase):
+class TestBotCallsCommands(unittest.TestCase):
+    def simple_server(server, time, session):
+        current_server = {
+            'server_id' : 1,
+            'awake' : True,
+            'timeout_duration_seconds': 1800,
+            'banned_words': [{
+                'rowid': 1,
+                'server_id': 1,
+                'banned_word': 'vore',
+                'infracted_at': (time - datetime.timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S"),
+                'calledout_at': (time - datetime.timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S")
+            }]
+        }
+        return DiscordServer(current_server, time, None)
+
     def setUp(self):
-        self.author = Mock(**{
+        self.current_time = datetime.datetime.now()
+        self.nonadmin = Mock(**{
+                'id': 2,
+                'mention': "@test",
+                'permissions_in.return_value': Mock(**{
+                    'administrator': False
+                    }),
+                'bot': False
+            })
+        self.admin = Mock(**{
                 'id': 2,
                 'mention': "@test",
                 'permissions_in.return_value': Mock(**{
@@ -322,114 +347,142 @@ class testCommandParsingAdmin(unittest.TestCase):
                 'bot': False
             })
 
-    def test_parse_for_command__VT(self):
-        msg = "!vt"
-        cmd = bot.parse_for_command(msg, self.author, 1)
-        self.assertEqual(cmd, bot.Commands.VT)
+    @patch('bot.fetch_server_from_api', side_effect=simple_server)
+    @patch.object(NoCommand, 'execute')
+    def test_handle_message__no_command(self, noMock, sMock):
+        message = Mock(**{
+            'server': Mock(**{
+                'id': 1
+            }),
+            'content': "!vttest",
+            'author': self.nonadmin,
+        })
 
-    def test_parse_for_command__VTSilence_only(self):
-        msg = "!vtsilence"
-        cmd = bot.parse_for_command(msg, self.author, 1)
-        self.assertEqual(cmd, bot.Commands.VTSILENCE)
+        message_to_send = bot.handle_message(message, self.current_time, None)
+        self.assertTrue(noMock.called)
 
-    def test_parse_for_command__VTSilence_typo(self):
-        msg = "!vtsience"
-        cmd = bot.parse_for_command(msg, self.author, 1)
-        self.assertNotEqual(cmd, bot.Commands.VTSILENCE)
+    @patch('bot.fetch_server_from_api', side_effect=simple_server)
+    @patch.object(TimerCommand, 'execute')
+    def test_handle_message__VT(self, vtMock, sMock):
+        message = Mock(**{
+            'server': Mock(**{
+                'id': 1
+            }),
+            'content': "!vt",
+            'author': self.nonadmin,
+        })
 
-    def test_parse_for_command__VTSilence_after(self):
-        msg = "!vtsilence test"
-        cmd = bot.parse_for_command(msg, self.author, 1)
-        self.assertEqual(cmd, bot.Commands.VTSILENCE)
+        message_to_send = bot.handle_message(message, self.current_time, None)
+        self.assertTrue(vtMock.called)
 
-    def test_parse_for_command__VTAlert_only(self):
-        msg = "!vtalert"
-        cmd = bot.parse_for_command(msg, self.author, 1)
-        self.assertEqual(cmd, bot.Commands.VTALERT)
+    @patch('bot.fetch_server_from_api', side_effect=simple_server)
+    @patch.object(TimerCommand, 'execute')
+    def test_handle_message__VT_extra(self, vtMock, sMock):
+        message = Mock(**{
+            'server': Mock(**{
+                'id': 1
+            }),
+            'content': "!vt test",
+            'author': self.nonadmin,
+        })
 
-    def test_parse_for_command__VTSilence_typo(self):
-        msg = "!vtaert"
-        cmd = bot.parse_for_command(msg, self.author, 1)
-        self.assertNotEqual(cmd, bot.Commands.VTALERT)
+        message_to_send = bot.handle_message(message, self.current_time, None)
+        self.assertTrue(vtMock.called)
 
-    def test_parse_for_command__VTSilence_after(self):
-        msg = "!vtalert test"
-        cmd = bot.parse_for_command(msg, self.author, 1)
-        self.assertEqual(cmd, bot.Commands.VTALERT)
+    @patch('bot.fetch_server_from_api', side_effect=simple_server)
+    @patch.object(ChangeTimeCommand, 'execute')
+    def test_handle_message__VT_delay_nonadmin(self, timeMock, sMock):
+        message = Mock(**{
+            'server': Mock(**{
+                'id': 1
+            }),
+            'content': "!vtdelay 1",
+            'author': self.nonadmin,
+        })
 
-    def test_parse_for_command__VTHelp_only(self):
-        msg = "!vthelp"
-        cmd = bot.parse_for_command(msg, self.author, 1)
-        self.assertEqual(cmd, bot.Commands.VTHELP)
+        message_to_send = bot.handle_message(message, self.current_time, None)
+        self.assertFalse(timeMock.called)
 
-    def test_parse_for_command__VTLast_only(self):
-        msg = "!vtlast"
-        cmd = bot.parse_for_command(msg, self.author, 1)
-        self.assertEqual(cmd, bot.Commands.VTLAST)
+    @patch('bot.fetch_server_from_api', side_effect=simple_server)
+    @patch.object(ChangeTimeCommand, 'execute')
+    def test_handle_message__VT_delay_admin(self, timeMock, sMock):
+        message = Mock(**{
+            'server': Mock(**{
+                'id': 1
+            }),
+            'content': "!vtdelay 1",
+            'author': self.admin,
+        })
 
-    def test_parse_for_command__VTCT_only(self):
-        msg = "!vtct"
-        cmd = bot.parse_for_command(msg, self.author, 1)
-        self.assertEqual(cmd, bot.Commands.VTCT)
+        message_to_send = bot.handle_message(message, self.current_time, None)
+        self.assertTrue(timeMock.called)
 
-    def test_parse_for_command__VTBan_only(self):
-        msg = "!vtban"
-        cmd = bot.parse_for_command(msg, self.author, 1)
-        self.assertEqual(cmd, bot.Commands.VTBAN)
+    @patch('bot.fetch_server_from_api', side_effect=simple_server)
+    @patch.object(ChangeBanCommand, 'execute')
+    def test_handle_message__VT_ban_admin(self, banMock, sMock):
+        message = Mock(**{
+            'server': Mock(**{
+                'id': 1
+            }),
+            'content': "!vtban 1",
+            'author': self.admin,
+        })
 
+        message_to_send = bot.handle_message(message, self.current_time, None)
+        self.assertTrue(banMock.called)
 
-class testCommandParsingNoAdmin(unittest.TestCase):
-    def setUp(self):
-        self.author = Mock(**{
-                'id': 2,
-                'mention': "@test",
-                'permissions_in.return_value': Mock(**{
-                    'administrator': False
-                    }),
-                'bot': False
-            })
+    @patch('bot.fetch_server_from_api', side_effect=simple_server)
+    @patch.object(CooldownCommand, 'execute')
+    def test_handle_message__VT_ct(self, ctMock, sMock):
+        message = Mock(**{
+            'server': Mock(**{
+                'id': 1
+            }),
+            'content': "!vtct",
+            'author': self.admin,
+        })
 
-    def test_parse_for_command__VT_only(self):
-        msg = "!vt"
-        cmd = bot.parse_for_command(msg, self.author, 1)
-        self.assertEqual(cmd, bot.Commands.VT)
+        message_to_send = bot.handle_message(message, self.current_time, None)
+        self.assertTrue(ctMock.called)
 
-    def test_parse_for_command__VT_after(self):
-        msg = "test !vt"
-        cmd = bot.parse_for_command(msg, self.author, 1)
-        self.assertEqual(cmd, bot.Commands.NOCOMMAND)
+    @patch('bot.fetch_server_from_api', side_effect=simple_server)
+    @patch.object(HelpCommand, 'execute')
+    def test_handle_message__VT_help(self, helpMock, sMock):
+        message = Mock(**{
+            'server': Mock(**{
+                'id': 1
+            }),
+            'content': "!vthelp",
+            'author': self.admin,
+        })
 
-    def test_parse_for_command__VT_before(self):
-        msg = "!vt testing"
-        cmd = bot.parse_for_command(msg, self.author, 1)
-        self.assertEqual(cmd, bot.Commands.VT)
+        message_to_send = bot.handle_message(message, self.current_time, None)
+        self.assertTrue(helpMock.called)
 
-    def test_parse_for_command__VTAlert_only(self):
-        msg = "!vtalert"
-        cmd = bot.parse_for_command(msg, self.author, 1)
-        self.assertEqual(cmd, bot.Commands.NEEDADMIN)
+    @patch('bot.fetch_server_from_api', side_effect=simple_server)
+    @patch.object(AlertCommand, 'execute')
+    def test_handle_message__VT_alert(self, alertMock, sMock):
+        message = Mock(**{
+            'server': Mock(**{
+                'id': 1
+            }),
+            'content': "!vtalert",
+            'author': self.admin,
+        })
 
-    def test_parse_for_command__VTSilence_only(self):
-        msg = "!vtsilence"
-        cmd = bot.parse_for_command(msg, self.author, 1)
-        self.assertEqual(cmd, bot.Commands.NEEDADMIN)
+        message_to_send = bot.handle_message(message, self.current_time, None)
+        self.assertTrue(alertMock.called)
 
-    def test_parse_for_command__VTBan_only(self):
-        msg = "!vtban"
-        cmd = bot.parse_for_command(msg, self.author, 1)
-        self.assertEqual(cmd, bot.Commands.NEEDADMIN)
+    @patch('bot.fetch_server_from_api', side_effect=simple_server)
+    @patch.object(SilenceCommand, 'execute')
+    def test_handle_message__VT_silence(self, silenceMock, sMock):
+        message = Mock(**{
+            'server': Mock(**{
+                'id': 1
+            }),
+            'content': "!vtsilence",
+            'author': self.admin,
+        })
 
-    def test_parse_for_command__VTHelp_only(self):
-        msg = "!vthelp"
-        cmd = bot.parse_for_command(msg, self.author, 1)
-        self.assertEqual(cmd, bot.Commands.VTHELP)
-
-    def test_parse_for_command__VTLast_only(self):
-        msg = "!vtlast"
-        cmd = bot.parse_for_command(msg, self.author, 1)
-        self.assertEqual(cmd, bot.Commands.VTLAST)
-
-    def test_parse_for_command__VTCT_only(self):
-        msg = "!vtct"
-        cmd = bot.parse_for_command(msg, self.author, 1)
-        self.assertEqual(cmd, bot.Commands.VTCT)
+        message_to_send = bot.handle_message(message, self.current_time, None)
+        self.assertTrue(silenceMock.called)
