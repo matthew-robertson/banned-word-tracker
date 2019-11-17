@@ -9,6 +9,7 @@ import time
 from config import API_BASE_URL
 from serverobjects.server import DiscordServer
 from utils.time import parse_time, format_time, format_seconds
+from commands import CooldownCommand, HelpCommand, TimerCommand, SilenceCommand, AlertCommand, ChangeBanCommand, ChangeTimeCommand
 
 class Commands(Enum):
     NEEDADMIN = -1
@@ -63,72 +64,25 @@ def parse_for_command(msg, msg_author, channel):
     return Commands.NOCOMMAND
 
 def handle_vtsilence(current_server, msg_author):
-    msg_to_send = "Ok {}, I'll be quiet now. use '!vtalert' to wake me back up!".format(msg_author.mention)
-    current_server.set_awake(False)
-    return msg_to_send
+    return SilenceCommand().execute(current_server, None, None, msg_author)
 
 def handle_vtalert(current_server, msg_author):
-    msg_to_send = "Ok {}, I'm scanning now.".format(msg_author.mention)
-    current_server.set_awake(True)
-    return msg_to_send
+    return AlertCommand().execute(current_server, None, None, msg_author)
 
-def handle_vtban(current_server, new_word, msg_author):
-    if len(new_word) < 1:
-        return "Sorry, I can't ban the empty string. Please try a message of the form '!vtban [wordToBan]'"
+def handle_vtban(current_server, message, msg_author):
+    return ChangeBanCommand().execute(current_server, None, message, msg_author)
 
-    current_server.banned_words[0].set_word(new_word)
-    msg_to_send = "Ok {}, '{}' is now considered a forbidden word.".format(msg_author.mention, new_word)
-    return msg_to_send
-
-def handle_vtdelay(current_server, time_string):
-    parsed_time = parse_time(time_string)
-
-    if parsed_time >= 0:
-        current_server.set_timeout(parsed_time)
-        formatted_time = format_seconds(parsed_time)
-        return "Cool, from now on I'll wait at least {} between alerts.".format(formatted_time)
-    else:
-        return "Sorry, I don't understand that formatting. I was expecting something like '!vtct hh:mm:ss'"
+def handle_vtdelay(current_server, message):
+    return ChangeTimeCommand().execute(current_server, None, message, None)
 
 def handle_vtct(current_time, current_server):
-    timeout_length = format_seconds(current_server.timeout_duration_seconds)
-    msg_to_send = "The cooldown period is {}.".format(timeout_length)
-
-    for banned_word in current_server.banned_words:
-        timeoutRemaining = format_time(banned_word.timeout_expiration_time, current_time)
-        if banned_word.is_cooldown_active:
-            msg_to_send += "\nI'll be able to issue another alert for '{}' in {}.".format(banned_word.banned_word, timeoutRemaining)
-        else:
-            msg_to_send += "\nI'm ready to issue another warning for '{}' now.".format(banned_word.banned_word)
-
-    return msg_to_send
+    return CooldownCommand().execute(current_server, current_time)
 
 def handle_vthelp():
-    msg_to_send = "You can ask me how long we've made it with '!vt'.\n"
-    msg_to_send += "You can learn how long my timeout is set for, and when I can issue another warning with '!vtct'.\n"
-    msg_to_send += "For other commands, server management, and general help, please check either the documentation (https://bwbdiscord.gitbook.io/banned-word-tracker/) or the support server (https://discord.gg/W7mrxRd)."
-    return msg_to_send
-
-def handle_vtlast(current_time, current_server):
-    banned_words = current_server.banned_words
-    time_without_warning = format_time(current_time, banned_words[0].calledout_at)
-    msg_to_send = "The server last received a warning for '{}' {} ago.".format(banned_words[0].banned_word, time_without_warning)
-
-    for banned_word in banned_words[1:]:
-        time_without_warning = format_time(current_time, banned_word.calledout_at)
-        msg_to_send += "\nThe server last received a warning for '{}' {} ago.".format(banned_word.banned_word, time_without_warning)
-
-    return msg_to_send
+    return HelpCommand().execute()
 
 def handle_vt(current_time, current_server):
-    banned_words = current_server.banned_words
-    timeLasted = format_time(current_time, banned_words[0].infracted_at)
-    msg_to_send = "The server has gone {} without mentioning '{}'.".format(timeLasted, banned_words[0].banned_word)
-    for banned_word in banned_words[1:]:
-        timeLasted = format_time(current_time, banned_word.infracted_at)
-        msg_to_send += "\nThe server has gone {} without mentioning '{}'.".format(timeLasted, banned_word.banned_word)
-
-    return msg_to_send
+   return TimerCommand().execute(current_server, current_time)
 
 def handle_command(found_command, current_time, current_server, message):
     msg_to_send = ""
@@ -137,16 +91,15 @@ def handle_command(found_command, current_time, current_server, message):
     elif found_command is Commands.VTALERT:
         msg_to_send = handle_vtalert(current_server, message.author)
     elif found_command is Commands.VTDELAY:
-        msg_to_send = handle_vtdelay(current_server, message.content[8:])
+        msg_to_send = handle_vtdelay(current_server, message.content)
     elif found_command is Commands.VTBAN:
-        new_word = message.content[6:].lstrip().split(' ')[0]
-        msg_to_send = handle_vtban(current_server, new_word, message.author)
+        msg_to_send = handle_vtban(current_server, message.content, message.author)
     elif found_command is Commands.VTCT:
         msg_to_send = handle_vtct(current_time, current_server)
     elif found_command is Commands.VTHELP:
         msg_to_send = handle_vthelp()
     elif found_command is Commands.VTLAST:
-        msg_to_send = handle_vtlast(current_time, current_server)
+        msg_to_send = "Sorry, this has been removed. Try '!vtct' instead."
     elif found_command is Commands.VT:
         msg_to_send = handle_vt(current_time, current_server)
 
