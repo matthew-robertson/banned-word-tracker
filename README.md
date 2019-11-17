@@ -18,7 +18,6 @@ The bot provides a few commands which are available to all users:
 * "!vthelp" - List all available commands.
 * "!vt" - Will list how long the server has gone without saying each currently banned word.
 * "!vtct" - Will list how long the timeout is set for, and when/if another issue can be issued for each banned word.
-* "!vtlast" - DEPRECATED, Will list how long it has been since a callout has been issued for each currently banned word.
 
 The bot also provides a few commands available only to server admins:
 * "!vtsilence" - Prevent the bot from sending messages calling out users.
