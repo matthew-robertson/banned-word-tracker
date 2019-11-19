@@ -38,13 +38,12 @@ def fetch_server_from_api(server_id, current_time, session):
 
 def handle_detected_banned_word(current_time, current_server, author, banned_word):
     called_out = current_server.awake and not banned_word.is_cooldown_active
+    time_lasted = format_time(current_time, banned_word.infracted_at)
+    timeout_length = format_seconds(current_server.timeout_duration_seconds)
     banned_word.send_infringing_message(current_time, called_out)
     
     if not called_out:
         return ""
-
-    time_lasted = format_time(current_time, banned_word.infracted_at)
-    timeout_length = format_seconds(current_server.timeout_duration_seconds)
     return callout_phrase.format(author.mention, timeout_length, time_lasted, banned_word.banned_word)
 
 def get_infringing_bans(banned_words, message, check_words):
