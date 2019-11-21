@@ -2,12 +2,15 @@ from commands.command import Command
 from utils.time import format_time
 
 class TimerCommand(Command):
-    def execute(self, current_server, current_time, message=None, author=None):
-        banned_words = current_server.banned_words
-        timeLasted = format_time(current_time, banned_words[0].infracted_at)
-        msg_to_send = "The server has gone {} without mentioning '{}'.".format(timeLasted, banned_words[0].banned_word)
-        for banned_word in banned_words[1:]:
-            timeLasted = format_time(current_time, banned_word.infracted_at)
-            msg_to_send += "\nThe server has gone {} without mentioning '{}'.".format(timeLasted, banned_word.banned_word)
+	def get_banned_word_text(self, ban, current_time):
+		time_lasted = format_time(current_time, ban.infracted_at)
+		return "The server has gone {} without mentioning '{}'.".format(time_lasted, ban.banned_word)
 
-        return msg_to_send
+	def execute(self, current_server, current_time, message, author):
+		banned_words = current_server.banned_words
+		try:
+			requested_index = int(message.split(" ")[1]) - 1
+			if requested_index < 0 or requested_index >= len(banned_words): raise
+			return self.get_banned_word_text(banned_words[requested_index], current_time)
+		except:
+			return "\n".join(map(lambda ban: self.get_banned_word_text(ban, current_time), banned_words))
