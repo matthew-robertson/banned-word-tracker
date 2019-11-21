@@ -9,8 +9,15 @@ class CooldownCommand(Command):
         else:
             return "I'm ready to issue another warning for '{}' now.".format(ban.banned_word)
 
-    def execute(self, current_server, current_time, message=None, author=None):
+    def execute(self, current_server, current_time, message, author):
+        banned_words = current_server.banned_words
         timeout_length = format_seconds(current_server.timeout_duration_seconds)
         msg_to_send = "The cooldown period is {}.\n".format(timeout_length)
-        msg_to_send += "\n".join(map(lambda ban: self.get_banned_word_text(ban, current_time), current_server.banned_words))
+
+        try:
+            requested_index = int(message.split(" ")[1]) - 1
+            if requested_index < 0 or requested_index >= len(banned_words): raise
+            msg_to_send += self.get_banned_word_text(banned_words[requested_index], current_time)
+        except:
+            msg_to_send += "\n".join(map(lambda ban: self.get_banned_word_text(ban, current_time), banned_words))
         return msg_to_send
