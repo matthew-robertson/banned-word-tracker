@@ -4,9 +4,8 @@ from unittest.mock import Mock, patch
 from types import MethodType
 
 import bot
-from commands import TimerCommand, CooldownCommand, HelpCommand, SilenceCommand, AlertCommand, ChangeBanCommand, ChangeTimeCommand, NoCommand
-from serverobjects.server import DiscordServer
-from serverobjects.ban import BanInstance
+from commands import TimerCommand, CooldownCommand, HelpCommand, SilenceCommand, AlertCommand, ChangeBanCommand, AddBanCommand, RemoveBanCommand, ChangeTimeCommand, NoCommand
+from serverobjects import DiscordServer, BanInstance
 from config import API_BASE_URL
 
 @patch.object(DiscordServer, 'update_server_settings')
@@ -418,13 +417,27 @@ class TestBotCallsCommands(unittest.TestCase):
         self.assertTrue(timeMock.called)
 
     @patch('bot.fetch_server_from_api', side_effect=simple_server)
-    @patch.object(ChangeBanCommand, 'execute')
+    @patch.object(AddBanCommand, 'execute')
     def test_handle_message__VT_ban_admin(self, banMock, sMock):
         message = Mock(**{
             'server': Mock(**{
                 'id': 1
             }),
             'content': "!vtban 1",
+            'author': self.admin,
+        })
+
+        message_to_send = bot.handle_message(message, self.current_time, None)
+        self.assertTrue(banMock.called)
+
+    @patch('bot.fetch_server_from_api', side_effect=simple_server)
+    @patch.object(RemoveBanCommand, 'execute')
+    def test_handle_message__VT_ban_admin(self, banMock, sMock):
+        message = Mock(**{
+            'server': Mock(**{
+                'id': 1
+            }),
+            'content': "!vtunban 1",
             'author': self.admin,
         })
 

@@ -40,7 +40,7 @@ class TestTimerCommand(unittest.TestCase):
 		server = DiscordServer(server_json, time, None)
 		self.assertEqual(
 			self.command.execute(server, time, "!vt", None),
-			"The server has gone 20 minutes and 0 seconds without mentioning 'vore'.")
+			"1, 'vore': 20 minutes and 0 seconds.")
 
 	def test_execute__multiple_words(self):
 		time = datetime.datetime.now()
@@ -66,8 +66,8 @@ class TestTimerCommand(unittest.TestCase):
 		server = DiscordServer(server_json, time, None)
 		self.assertEqual(
 			self.command.execute(server, time, "!vt", None),
-			"The server has gone 20 minutes and 0 seconds without mentioning 'vore'.\n" +
-			"The server has gone 40 minutes and 0 seconds without mentioning 'test'.")
+			"1, 'vore': 20 minutes and 0 seconds.\n" +
+			"2, 'test': 40 minutes and 0 seconds.")
 
 	def test_execute__one_of_multiple(self):
 		time = datetime.datetime.now()
@@ -93,10 +93,10 @@ class TestTimerCommand(unittest.TestCase):
 		server = DiscordServer(server_json, time, None)
 		self.assertEqual(
 			self.command.execute(server, time, "!vt 1", None),
-			"The server has gone 20 minutes and 0 seconds without mentioning 'vore'.")
+			"'vore': 20 minutes and 0 seconds.")
 		self.assertEqual(
 			self.command.execute(server, time, "!vt 2", None),
-			"The server has gone 40 minutes and 0 seconds without mentioning 'test'.")
+			"'test': 40 minutes and 0 seconds.")
 
 	def test_execute__out_of_range(self):
 		time = datetime.datetime.now()
@@ -122,9 +122,9 @@ class TestTimerCommand(unittest.TestCase):
 		server = DiscordServer(server_json, time, None)
 		self.assertEqual(
 			self.command.execute(server, time, "!vt 3", None),
-			"The server has gone 20 minutes and 0 seconds without mentioning 'vore'.\n" +
-			"The server has gone 40 minutes and 0 seconds without mentioning 'test'.")
+			"1, 'vore': 20 minutes and 0 seconds.\n" +
+			"2, 'test': 40 minutes and 0 seconds.")
 		self.assertEqual(
 			self.command.execute(server, time, "!vt -1", None),
-			"The server has gone 20 minutes and 0 seconds without mentioning 'vore'.\n" +
-			"The server has gone 40 minutes and 0 seconds without mentioning 'test'.")
+			"1, 'vore': 20 minutes and 0 seconds.\n" +
+			"2, 'test': 40 minutes and 0 seconds.")

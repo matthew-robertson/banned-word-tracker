@@ -6,7 +6,7 @@ import json
 from config import API_BASE_URL
 from serverobjects.server import DiscordServer
 from utils.time import parse_time, format_time, format_seconds
-from commands import TimerCommand, CooldownCommand, HelpCommand, SilenceCommand, AlertCommand, ChangeBanCommand, ChangeTimeCommand, NoCommand
+from commands import TimerCommand, CooldownCommand, HelpCommand, SilenceCommand, AlertCommand, AddBanCommand, RemoveBanCommand, ChangeTimeCommand, NoCommand
 
 command_map = defaultdict(
     lambda: NoCommand,
@@ -14,7 +14,8 @@ command_map = defaultdict(
         '!vtsilence': SilenceCommand,
         '!vtalert': AlertCommand,
         '!vtdelay': ChangeTimeCommand,
-        '!vtban': ChangeBanCommand,
+        '!vtban': AddBanCommand,
+        '!vtunban': RemoveBanCommand,
         '!vthelp': HelpCommand,
         '!vtct': CooldownCommand,
         '!vt': TimerCommand
