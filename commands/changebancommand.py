@@ -9,9 +9,17 @@ class ChangeBanCommand(Command):
 
 	def execute(self, current_server, current_time, message, author):
 		words = message.lstrip().split(' ')[1:]
-		new_word = words[0]
-		if len(new_word) < 1:
-			return "Sorry, I can't ban the empty string. Please try a message of the form '!vtban [wordToBan]'"
+		banned_words = current_server.banned_words
+		try:
+			requested_index = int(words[0]) - 1
+			new_word = words[1]
+			if requested_index < 0 or requested_index >= len(banned_words): raise
+			if len(new_word) < 1: raise
+			
+			old_word = banned_words[requested_index].banned_word
+			banned_words[requested_index].set_word(new_word)
+			return "Ok {}, '{}' has replaced '{}' as a forbidden word.".format(author.mention, new_word, old_word)
+		except:
+			return "Sorry, I couldn't understand that command. Make sure you're using a valid index and a non-empty word."
 
-		current_server.banned_words[0].set_word(new_word)
-		return "Ok {}, '{}' is now considered a forbidden word.".format(author.mention, new_word)
+		

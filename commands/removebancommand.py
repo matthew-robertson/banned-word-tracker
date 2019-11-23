@@ -9,7 +9,8 @@ class RemoveBanCommand(Command):
 
 	def execute(self, current_server, current_time, message, author):
 		words = message.lstrip().split(' ')[1:]
-		subcommand = words[0]
+		if len(words) < 1 or len(words[0]) < 1:
+			return "Sorry, I couldn't understand the provided index."
 		return self.remove_ban(current_server, words[0], author)
 
 	def remove_ban(self, current_server, ind_str, author):
