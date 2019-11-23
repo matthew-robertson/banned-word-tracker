@@ -22,6 +22,7 @@ class BanInstance:
     response = self._session.post(
       API_BASE_URL + 'v1/servers/' + str(self.server_id) + '/bans/' + str(self.ban_id),
       json = {'banned_word': new_word})
+    return response.ok
 
     if (response.ok):
       jData = json.loads(response.content)
