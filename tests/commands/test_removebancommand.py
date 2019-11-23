@@ -6,7 +6,7 @@ import datetime
 from commands import RemoveBanCommand
 from serverobjects.server import DiscordServer
 
-class TestAddBanCommand(unittest.TestCase):
+class TestRemoveBanCommand(unittest.TestCase):
 	def setUp(self):
 		self.command = RemoveBanCommand()
 
@@ -25,7 +25,7 @@ class TestAddBanCommand(unittest.TestCase):
 		self.assertTrue(result)
 
 	@patch('serverobjects.server.DiscordServer.unban_word')
-	def test_execute__add_ban_valid(self, word_patch):
+	def test_execute__remove_ban_valid(self, word_patch):
 		time = datetime.datetime.now()
 		server_json = {
 			'server_id' : 1,
@@ -35,6 +35,13 @@ class TestAddBanCommand(unittest.TestCase):
 				'rowid': 1,
 				'server_id': 1,
 				'banned_word': 'vore',
+				'infracted_at': (time - datetime.timedelta(minutes=20)).strftime("%Y-%m-%d %H:%M:%S"),
+				'calledout_at': (time - datetime.timedelta(minutes=20)).strftime("%Y-%m-%d %H:%M:%S")
+			},
+			{
+				'rowid': 2,
+				'server_id': 1,
+				'banned_word': 'test',
 				'infracted_at': (time - datetime.timedelta(minutes=20)).strftime("%Y-%m-%d %H:%M:%S"),
 				'calledout_at': (time - datetime.timedelta(minutes=20)).strftime("%Y-%m-%d %H:%M:%S")
 			}]

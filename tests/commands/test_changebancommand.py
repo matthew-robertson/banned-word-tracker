@@ -43,7 +43,7 @@ class TestChangeBanCommand(unittest.TestCase):
       'server': Mock(**{
         'id': 1
       }),
-      'content': "!vtban test",
+      'content': "!vtban 1 test",
       'author': Mock(**{
         'id': 2,
         'mention': "@test",
@@ -74,13 +74,26 @@ class TestChangeBanCommand(unittest.TestCase):
       'server': Mock(**{
         'id': 1
       }),
-      'content': "!vtban ",
+      'content': "!vtban 1",
       'author': Mock(**{
         'id': 2,
         'mention': "@test",
         'bot': False
       }),
     })
+
+		message = Mock(**{
+    	'server': Mock(**{
+        'id': 1
+      }),
+      'content': "!vtban asdf asdf",
+      'author': Mock(**{
+        'id': 2,
+        'mention': "@test",
+        'bot': False
+      }),
+    })
+
 		server = DiscordServer(server_json, time, None)
 		self.command.execute(server, time, message.content, message.author)
 		self.assertFalse(word_patch.called)
