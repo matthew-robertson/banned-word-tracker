@@ -4,3 +4,5 @@ python:
 - '3.6'
 script:
 - python3 -m unittest discover
+env:
+- CLIENT_KEY=ASDFASDF API_BASE_URL=http://127.0.0.1
