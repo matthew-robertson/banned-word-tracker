@@ -1,0 +1,10 @@
+version: '3'
+services:
+  bot:
+    env_file: environment.conf
+    build: .
+  api:
+    build: ../bannedWordServer
+    env_file: ../bannedWordServer/envrionment.conf
+    ports:
+      - "5000:5000"
