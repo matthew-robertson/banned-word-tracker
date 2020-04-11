@@ -6,7 +6,6 @@ from types import MethodType
 import bot
 from commands import TimerCommand, CooldownCommand, HelpCommand, SilenceCommand, AlertCommand, ChangeBanCommand, AddBanCommand, RemoveBanCommand, ChangeTimeCommand, NoCommand
 from serverobjects import DiscordServer, BanInstance
-from config import API_BASE_URL
 
 @patch.object(DiscordServer, 'update_server_settings')
 @patch.object(BanInstance, 'send_infringing_message')

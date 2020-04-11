@@ -1,10 +1,12 @@
 from confusables import confusable_regex
 import datetime
 import json
+import os
 import re
 import requests
 
-from config import API_BASE_URL, CLIENT_KEY
+API_BASE_URL = os.environ["API_BASE_URL"]
+CLIENT_KEY = os.environ["CLIENT_KEY"]
 
 class BanInstance:
   def __init__(self, banJson, current_time, timeout_duration, session):

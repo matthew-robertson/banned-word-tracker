@@ -1,8 +1,11 @@
 import requests
 import json
+import os
 
-from config import API_BASE_URL, CLIENT_KEY
 from serverobjects import BanInstance
+
+API_BASE_URL = os.environ["API_BASE_URL"]
+CLIENT_KEY = os.environ["CLIENT_KEY"]
 
 class DiscordServer:
 	def __init__(self, server_data, current_time, session):

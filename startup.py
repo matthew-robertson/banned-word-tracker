@@ -1,13 +1,11 @@
 import json
 import requests
 import subprocess
-import config
+import os
 
 print('Hitting discord\'s API to determine how many shards are needed.')
-key = config.CLIENT_KEY
-
 url = 'https://discordapp.com/api/v6/gateway/bot'
-response = requests.get(url, headers = {'Authorization': 'Bot ' + key})
+response = requests.get(url, headers = {'Authorization': 'Bot ' + os.environ["CLIENT_KEY"]})
 
 processes = []
 if (response.ok):
@@ -19,3 +17,4 @@ if (response.ok):
 else:
 	print("Can't reach the Gateway endpoint. Giving up.")
 
+exit_codes = [p.wait() for p in processes]

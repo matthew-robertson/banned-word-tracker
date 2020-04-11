@@ -1,0 +1,14 @@
+version: '3.7'
+services:
+  bot:
+    env_file: environment.conf
+    build: .
+  api:
+    build: ../bannedWordServer
+    env_file: ../bannedWordServer/environment.conf
+    ports:
+      - "5000:5000"
+    volumes:
+      - type: bind
+        source: ../bannedWordServer/bannedWordServer/vt.db
+        target: /usr/src/api/bannedWordServer/vt.db
