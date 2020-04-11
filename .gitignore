@@ -1,4 +1,4 @@
 *.pyc
 logs/*.txt
 db/*
-*.conf
+environment.conf
