@@ -74,6 +74,28 @@ class TestChangeTimeCommand(unittest.TestCase):
 		self.assertTrue(time_patch.called)
 
 	@patch('serverobjects.server.DiscordServer.set_timeout')
+	def test_execute__change_second_too_long(self, time_patch):
+		time_patch.return_value = False
+
+		message = Mock(**{
+      'server': Mock(**{
+        'id': 1
+      }),
+      'content': "!vtdelay 777777777777",
+      'author': Mock(**{
+        'id': 2,
+        'mention': "@test",
+        'bot': False
+      }),
+    })
+		server = DiscordServer(self.server_json, self.time, None)
+		retval = self.command.execute(server, self.time, message.content, message.author)
+		self.assertEqual(
+			retval,
+			"Sorry, something went wrong and I couldn't update the delay. Make sure the delay is under 100 million seconds (~3 years)"
+		)
+
+	@patch('serverobjects.server.DiscordServer.set_timeout')
 	def test_execute__change_extra_invalid(self, time_patch):
 		message = Mock(**{
       'server': Mock(**{

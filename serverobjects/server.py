@@ -34,6 +34,8 @@ class DiscordServer:
 			jData = json.loads(response.content)
 			self.awake = bool(jData['awake'])
 			self.timeout_duration_seconds = int(jData['timeout_duration_seconds'])
+			return True
+		return False
 
 	def ban_new_word(self, new_word):
 		response = self._session.post(
