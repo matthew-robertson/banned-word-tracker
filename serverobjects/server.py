@@ -20,10 +20,10 @@ class DiscordServer:
 			self.banned_words.append(ban)
 
 	def set_awake(self, new_awake):
-		self.update_server_settings({'awake': new_awake})
+		return self.update_server_settings({'awake': new_awake})
 
 	def set_timeout(self, new_timeout):
-		self.update_server_settings({'timeout_duration_seconds': new_timeout})
+		return self.update_server_settings({'timeout_duration_seconds': new_timeout})
 
 	def update_server_settings(self, updated_params):
 		response = self._session.post(
@@ -34,8 +34,7 @@ class DiscordServer:
 			jData = json.loads(response.content)
 			self.awake = bool(jData['awake'])
 			self.timeout_duration_seconds = int(jData['timeout_duration_seconds'])
-			return True
-		return False
+		return response.ok
 
 	def ban_new_word(self, new_word):
 		response = self._session.post(
