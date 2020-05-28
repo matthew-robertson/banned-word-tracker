@@ -37,7 +37,7 @@ class TestChangeTimeCommand(unittest.TestCase):
 		result = self.command.is_command_authorized(permissions)
 		self.assertTrue(result)
 
-	@patch('serverobjects.server.DiscordServer.set_timeout')
+	@patch('serverobjects.server.DiscordServer.update_server_settings')
 	def test_execute__change_full_time_valid(self, time_patch):
 		message = Mock(**{
       'server': Mock(**{
@@ -51,17 +51,21 @@ class TestChangeTimeCommand(unittest.TestCase):
       }),
     })
 		server = DiscordServer(self.server_json, self.time, None)
-		self.command.execute(server, self.time, message.content, message.author)
-		time_patch.assert_called_with(1+1*60+1*60*60)
+		retval = self.command.execute(server, self.time, message.content, message.author)
+		time_patch.assert_called_with({ 'timeout_duration_seconds': 1+1*60+1*60*60 })
+		self.assertEqual(
+			retval,
+			"Cool, from now on I'll wait at least 1 hour, 1 minute, and 1 second between alerts."
+		)
 		self.assertTrue(time_patch.called)
 
-	@patch('serverobjects.server.DiscordServer.set_timeout')
+	@patch('serverobjects.server.DiscordServer.update_server_settings')
 	def test_execute__change_second_time_valid(self, time_patch):
 		message = Mock(**{
       'server': Mock(**{
         'id': 1
       }),
-      'content': "!vtdelay 999",
+      'content': "!vtdelay 45",
       'author': Mock(**{
         'id': 2,
         'mention': "@test",
@@ -69,11 +73,15 @@ class TestChangeTimeCommand(unittest.TestCase):
       }),
     })
 		server = DiscordServer(self.server_json, self.time, None)
-		self.command.execute(server, self.time, message.content, message.author)
-		time_patch.assert_called_with(999)
+		retval = self.command.execute(server, self.time, message.content, message.author)
+		time_patch.assert_called_with({ 'timeout_duration_seconds': 45 })
+		self.assertEqual(
+			retval,
+			"Cool, from now on I'll wait at least 45 seconds between alerts."
+		)
 		self.assertTrue(time_patch.called)
 
-	@patch('serverobjects.server.DiscordServer.set_timeout')
+	@patch('serverobjects.server.DiscordServer.update_server_settings')
 	def test_execute__change_second_too_long(self, time_patch):
 		time_patch.return_value = False
 
