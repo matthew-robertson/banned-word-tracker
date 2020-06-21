@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 from types import MethodType
 
 import bot
-from commands import TimerCommand, CooldownCommand, HelpCommand, SilenceCommand, AlertCommand, ChangeBanCommand, AddBanCommand, RemoveBanCommand, ChangeTimeCommand, NoCommand
+from commands import TimerCommand, ListRecordCommand, CooldownCommand, HelpCommand, SilenceCommand, AlertCommand, ChangeBanCommand, AddBanCommand, RemoveBanCommand, ChangeTimeCommand, NoCommand
 from serverobjects import DiscordServer, BanInstance
 
 @patch.object(DiscordServer, 'update_server_settings')
@@ -20,14 +20,22 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
                 'server_id': 1,
                 'banned_word': 'vore',
                 'infracted_at': (time - datetime.timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S"),
-                'calledout_at': (time - datetime.timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S")
+                'calledout_at': (time - datetime.timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S"),
+                'record': {
+                    'record_seconds': 2400,
+                    'infraction_count': 0
+                }
             },
             {
                 'rowid': 2,
                 'server_id': 2,
                 'banned_word': 'bepis',
                 'infracted_at': (time - datetime.timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S"),
-                'calledout_at': (time - datetime.timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S")
+                'calledout_at': (time - datetime.timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S"),
+                'record': {
+                    'record_seconds': 2400,
+                    'infraction_count': 0
+                }
             }]
         }
         return DiscordServer(current_server, time, None)
@@ -247,7 +255,11 @@ class TestAwakeCooldownBot(unittest.TestCase):
                 'server_id': 1,
                 'banned_word': 'vore',
                 'infracted_at': (time - datetime.timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S"),
-                'calledout_at': (time - datetime.timedelta(minutes=20)).strftime("%Y-%m-%d %H:%M:%S")
+                'calledout_at': (time - datetime.timedelta(minutes=20)).strftime("%Y-%m-%d %H:%M:%S"),
+                'record': {
+                    'record_seconds': 2400,
+                    'infraction_count': 0
+                }
             }]
         }
         return DiscordServer(current_server, time, None)
@@ -285,7 +297,11 @@ class TestAsleepBot(unittest.TestCase):
                 'server_id': 1,
                 'banned_word': 'vore',
                 'infracted_at': (time - datetime.timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S"),
-                'calledout_at': (time - datetime.timedelta(minutes=40)).strftime("%Y-%m-%d %H:%M:%S")
+                'calledout_at': (time - datetime.timedelta(minutes=40)).strftime("%Y-%m-%d %H:%M:%S"),
+                'record': {
+                    'record_seconds': 2400,
+                    'infraction_count': 0
+                }
             }]
         }
         return DiscordServer(current_server, time, None)
@@ -321,7 +337,11 @@ class TestBotCallsCommands(unittest.TestCase):
                 'server_id': 1,
                 'banned_word': 'vore',
                 'infracted_at': (time - datetime.timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S"),
-                'calledout_at': (time - datetime.timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S")
+                'calledout_at': (time - datetime.timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S"),
+                'record': {
+                    'record_seconds': 2400,
+                    'infraction_count': 0
+                }
             }]
         }
         return DiscordServer(current_server, time, None)
@@ -367,6 +387,20 @@ class TestBotCallsCommands(unittest.TestCase):
                 'id': 1
             }),
             'content': "!vt",
+            'author': self.nonadmin,
+        })
+
+        message_to_send = bot.handle_message(message, self.current_time, None)
+        self.assertTrue(vtMock.called)
+
+    @patch('bot.fetch_server_from_api', side_effect=simple_server)
+    @patch.object(ListRecordCommand, 'execute')
+    def test_handle_message__VTR(self, vtMock, sMock):
+        message = Mock(**{
+            'server': Mock(**{
+                'id': 1
+            }),
+            'content': "!vtr",
             'author': self.nonadmin,
         })
 

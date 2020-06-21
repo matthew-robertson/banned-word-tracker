@@ -3,12 +3,12 @@ from unittest.mock import patch
 import discord
 import datetime
 
-from commands import CooldownCommand
+from commands import ListRecordCommand
 from serverobjects.server import DiscordServer
 
 class TestCooldownCommand(unittest.TestCase):
     def setUp(self):
-        self.command = CooldownCommand()
+        self.command = ListRecordCommand()
 
     def test_is_command_authorized__no_permissions_allowed(self):
         result = self.command.is_command_authorized()
@@ -24,7 +24,7 @@ class TestCooldownCommand(unittest.TestCase):
         result = self.command.is_command_authorized(permissions)
         self.assertTrue(result)
 
-    def test_execute__one_word_cooldown(self):
+    def test_execute__one_word_record_is_longest(self):
         time = datetime.datetime.now()
         server_json = {
             'server_id' : 1,
@@ -38,17 +38,16 @@ class TestCooldownCommand(unittest.TestCase):
                 'calledout_at': (time - datetime.timedelta(minutes=20)).strftime("%Y-%m-%d %H:%M:%S"),
                 'record': {
                     'record_seconds': 2400,
-                    'infraction_count': 0
+                    'infraction_count': 1
                 }
             }]
         }
         server = DiscordServer(server_json, time, None)
         self.assertEqual(
-            self.command.execute(server, time, "!vtct", None),
-            "The cooldown period is 30 minutes and 0 seconds.\n" +
-            "I'll be able to issue another alert for 'vore' in 9 minutes and 59 seconds.")
+            self.command.execute(server, time, "!vtr", None),
+           "The server has said 'vore' 1 time.\nThe server's longest streak without saying 'vore' is 40 minutes and 0 seconds.")
 
-    def test_execute__one_word_available(self):
+    def test_execute__one_word_record_is_current(self):
         time = datetime.datetime.now()
         server_json = {
             'server_id' : 1,
@@ -58,18 +57,18 @@ class TestCooldownCommand(unittest.TestCase):
                 'rowid': 1,
                 'server_id': 1,
                 'banned_word': 'vore',
-                'infracted_at': (time - datetime.timedelta(minutes=40)).strftime("%Y-%m-%d %H:%M:%S"),
-                'calledout_at': (time - datetime.timedelta(minutes=40)).strftime("%Y-%m-%d %H:%M:%S"),
+                'infracted_at': (time - datetime.timedelta(minutes=20)).strftime("%Y-%m-%d %H:%M:%S"),
+                'calledout_at': (time - datetime.timedelta(minutes=20)).strftime("%Y-%m-%d %H:%M:%S"),
                 'record': {
-                    'record_seconds': 2400,
-                    'infraction_count': 0
+                    'record_seconds': 600,
+                    'infraction_count': 20
                 }
             }]
         }
         server = DiscordServer(server_json, time, None)
         self.assertEqual(
-            self.command.execute(server, time, "!vtct", None),
-            "The cooldown period is 30 minutes and 0 seconds.\nI'm ready to issue another warning for 'vore' now.")
+            self.command.execute(server, time, "!vtr", None),
+            "The server has said 'vore' 20 times.\nThe server's currently on its longest streak without saying 'vore': 20 minutes and 0 seconds.")
 
     def test_execute__multiple_words_mixed(self):
         time = datetime.datetime.now()
@@ -84,7 +83,7 @@ class TestCooldownCommand(unittest.TestCase):
                 'infracted_at': (time - datetime.timedelta(minutes=40)).strftime("%Y-%m-%d %H:%M:%S"),
                 'calledout_at': (time - datetime.timedelta(minutes=40)).strftime("%Y-%m-%d %H:%M:%S"),
                 'record': {
-                    'record_seconds': 2400,
+                    'record_seconds': 1200,
                     'infraction_count': 0
                 }
             },
@@ -96,16 +95,15 @@ class TestCooldownCommand(unittest.TestCase):
                 'calledout_at': (time - datetime.timedelta(minutes=20)).strftime("%Y-%m-%d %H:%M:%S"),
                 'record': {
                     'record_seconds': 2400,
-                    'infraction_count': 0
+                    'infraction_count': 20
                 }
             }]
         }
         server = DiscordServer(server_json, time, None)
         self.assertEqual(
             self.command.execute(server, time, "!vtct", None),
-            "The cooldown period is 30 minutes and 0 seconds.\n" +
-            "I'm ready to issue another warning for 'vore' now.\n" +
-            "I'll be able to issue another alert for 'test' in 9 minutes and 59 seconds.")
+            "The server has said 'vore' 0 times.\nThe server's currently on its longest streak without saying 'vore': 40 minutes and 0 seconds.\n\n" +
+            "The server has said 'test' 20 times.\nThe server's longest streak without saying 'test' is 40 minutes and 0 seconds.")
 
     def test_execute__one_of_multiple(self):
         time = datetime.datetime.now()
@@ -120,8 +118,8 @@ class TestCooldownCommand(unittest.TestCase):
                 'infracted_at': (time - datetime.timedelta(minutes=40)).strftime("%Y-%m-%d %H:%M:%S"),
                 'calledout_at': (time - datetime.timedelta(minutes=40)).strftime("%Y-%m-%d %H:%M:%S"),
                 'record': {
-                    'record_seconds': 2400,
-                    'infraction_count': 0
+                    'record_seconds': 1200,
+                    'infraction_count': 1
                 }
             },
             {
@@ -132,19 +130,17 @@ class TestCooldownCommand(unittest.TestCase):
                 'calledout_at': (time - datetime.timedelta(minutes=20)).strftime("%Y-%m-%d %H:%M:%S"),
                 'record': {
                     'record_seconds': 2400,
-                    'infraction_count': 0
+                    'infraction_count': 20
                 }
             }]
         }
         server = DiscordServer(server_json, time, None)
         self.assertEqual(
-            self.command.execute(server, time, "!vtct 1", None),
-            "The cooldown period is 30 minutes and 0 seconds.\n" +
-            "I'm ready to issue another warning for 'vore' now.")
+            self.command.execute(server, time, "!vtr 1", None),
+            "The server has said 'vore' 1 time.\nThe server's currently on its longest streak without saying 'vore': 40 minutes and 0 seconds.")
         self.assertEqual(
-            self.command.execute(server, time, "!vtct 2", None),
-            "The cooldown period is 30 minutes and 0 seconds.\n" +
-            "I'll be able to issue another alert for 'test' in 9 minutes and 59 seconds.")
+            self.command.execute(server, time, "!vtr 2", None),
+            "The server has said 'test' 20 times.\nThe server's longest streak without saying 'test' is 40 minutes and 0 seconds.")
 
     def test_execute__out_of_range(self):
         time = datetime.datetime.now()
@@ -159,7 +155,7 @@ class TestCooldownCommand(unittest.TestCase):
                 'infracted_at': (time - datetime.timedelta(minutes=40)).strftime("%Y-%m-%d %H:%M:%S"),
                 'calledout_at': (time - datetime.timedelta(minutes=40)).strftime("%Y-%m-%d %H:%M:%S"),
                 'record': {
-                    'record_seconds': 2400,
+                    'record_seconds': 1200,
                     'infraction_count': 0
                 }
             },
@@ -171,18 +167,16 @@ class TestCooldownCommand(unittest.TestCase):
                 'calledout_at': (time - datetime.timedelta(minutes=20)).strftime("%Y-%m-%d %H:%M:%S"),
                 'record': {
                     'record_seconds': 2400,
-                    'infraction_count': 0
+                    'infraction_count': 69
                 }
             }]
         }
         server = DiscordServer(server_json, time, None)
         self.assertEqual(
-            self.command.execute(server, time, "!vtct -1", None),
-            "The cooldown period is 30 minutes and 0 seconds.\n" +
-            "I'm ready to issue another warning for 'vore' now.\n" +
-            "I'll be able to issue another alert for 'test' in 9 minutes and 59 seconds.")
+            self.command.execute(server, time, "!vtr -1", None),
+            "The server has said 'vore' 0 times.\nThe server's currently on its longest streak without saying 'vore': 40 minutes and 0 seconds.\n\n" +
+            "The server has said 'test' 69 times.\nThe server's longest streak without saying 'test' is 40 minutes and 0 seconds.")
         self.assertEqual(
-            self.command.execute(server, time, "!vtct 5", None),
-            "The cooldown period is 30 minutes and 0 seconds.\n" +
-            "I'm ready to issue another warning for 'vore' now.\n" +
-            "I'll be able to issue another alert for 'test' in 9 minutes and 59 seconds.")
+            self.command.execute(server, time, "!vtr 5", None),
+            "The server has said 'vore' 0 times.\nThe server's currently on its longest streak without saying 'vore': 40 minutes and 0 seconds.\n\n" +
+            "The server has said 'test' 69 times.\nThe server's longest streak without saying 'test' is 40 minutes and 0 seconds.")

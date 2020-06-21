@@ -16,6 +16,8 @@ class BanInstance:
     self.calledout_at = datetime.datetime.strptime(banJson['calledout_at'], "%Y-%m-%d %H:%M:%S")
     self.infracted_at = datetime.datetime.strptime(banJson['infracted_at'], "%Y-%m-%d %H:%M:%S")
     self.server_id = banJson['server_id']
+    self.record_seconds = banJson['record']['record_seconds']
+    self.infraction_count = banJson['record']['infraction_count']
 
     self.is_cooldown_active = (current_time - self.calledout_at).total_seconds() < timeout_duration
     self.timeout_expiration_time = self.calledout_at + datetime.timedelta(seconds=timeout_duration)
