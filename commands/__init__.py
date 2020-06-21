@@ -1,5 +1,6 @@
 from .cooldowncommand import CooldownCommand
 from .timercommand import TimerCommand
+from .listrecordcommand import ListRecordCommand
 from .helpcommand import HelpCommand
 from .silencecommand import SilenceCommand
 from .alertcommand import AlertCommand

@@ -19,7 +19,11 @@ class TestChangeTimeCommand(unittest.TestCase):
 				'server_id': 1,
 				'banned_word': 'vore',
 				'infracted_at': (self.time - datetime.timedelta(minutes=20)).strftime("%Y-%m-%d %H:%M:%S"),
-				'calledout_at': (self.time - datetime.timedelta(minutes=20)).strftime("%Y-%m-%d %H:%M:%S")
+				'calledout_at': (self.time - datetime.timedelta(minutes=20)).strftime("%Y-%m-%d %H:%M:%S"),
+        'record': {
+            'record_seconds': 2400,
+            'infraction_count': 0
+        }
 			}]
 		}
 

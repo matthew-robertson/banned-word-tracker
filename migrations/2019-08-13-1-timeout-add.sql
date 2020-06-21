@@ -1,1 +1,0 @@
-ALTER TABLE 'server' ADD COLUMN timeout_duration_seconds DEFAULT 1800;

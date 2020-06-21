@@ -6,7 +6,7 @@ import os
 
 from serverobjects.server import DiscordServer
 from utils.time import parse_time, format_time, format_seconds
-from commands import TimerCommand, CooldownCommand, HelpCommand, SilenceCommand, AlertCommand, AddBanCommand, RemoveBanCommand, ChangeBanCommand, ChangeTimeCommand, NoCommand
+from commands import TimerCommand, CooldownCommand, HelpCommand, SilenceCommand, AlertCommand, AddBanCommand, RemoveBanCommand, ChangeBanCommand, ChangeTimeCommand, ListRecordCommand, NoCommand
 
 API_BASE_URL = os.environ["API_BASE_URL"]
 
@@ -21,6 +21,7 @@ command_map = defaultdict(
         '!vtunban': RemoveBanCommand,
         '!vthelp': HelpCommand,
         '!vtct': CooldownCommand,
+        '!vtr': ListRecordCommand,
         '!vt': TimerCommand
     })
 
