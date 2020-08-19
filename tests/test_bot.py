@@ -15,6 +15,7 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
             'server_id' : 1,
             'awake' : True,
             'timeout_duration_seconds': 1800,
+            'prefix': '!vt',
             'banned_words': [{
                 'rowid': 1,
                 'server_id': 1,
@@ -250,6 +251,7 @@ class TestAwakeCooldownBot(unittest.TestCase):
             'server_id' : 1,
             'awake' : True,
             'timeout_duration_seconds': 1800,
+            'prefix': '!vt',
             'banned_words': [{
                 'rowid': 1,
                 'server_id': 1,
@@ -292,6 +294,7 @@ class TestAsleepBot(unittest.TestCase):
             'server_id' : 1,
             'awake' : False,
             'timeout_duration_seconds': 1800,
+            'prefix': '!vt',
             'banned_words': [{
                 'rowid': 1,
                 'server_id': 1,
@@ -332,6 +335,7 @@ class TestBotCallsCommands(unittest.TestCase):
             'server_id' : 1,
             'awake' : True,
             'timeout_duration_seconds': 1800,
+            'prefix': '!bad',
             'banned_words': [{
                 'rowid': 1,
                 'server_id': 1,
@@ -367,12 +371,26 @@ class TestBotCallsCommands(unittest.TestCase):
 
     @patch('bot.fetch_server_from_api', side_effect=simple_server)
     @patch.object(NoCommand, 'execute')
-    def test_handle_message__no_command(self, noMock, sMock):
+    def test_handle_message__not_command(self, noMock, sMock):
         message = Mock(**{
             'server': Mock(**{
                 'id': 1
             }),
-            'content': "!vttest",
+            'content': "!badtest",
+            'author': self.nonadmin,
+        })
+
+        message_to_send = bot.handle_message(message, self.current_time, None)
+        self.assertTrue(noMock.called)
+
+    @patch('bot.fetch_server_from_api', side_effect=simple_server)
+    @patch.object(NoCommand, 'execute')
+    def test_handle_message__bad_prefix(self, noMock, sMock):
+        message = Mock(**{
+            'server': Mock(**{
+                'id': 1
+            }),
+            'content': "!vt",
             'author': self.nonadmin,
         })
 
@@ -386,7 +404,7 @@ class TestBotCallsCommands(unittest.TestCase):
             'server': Mock(**{
                 'id': 1
             }),
-            'content': "!vt",
+            'content': "!bad",
             'author': self.nonadmin,
         })
 
@@ -400,7 +418,7 @@ class TestBotCallsCommands(unittest.TestCase):
             'server': Mock(**{
                 'id': 1
             }),
-            'content': "!vtr",
+            'content': "!badr",
             'author': self.nonadmin,
         })
 
@@ -414,7 +432,7 @@ class TestBotCallsCommands(unittest.TestCase):
             'server': Mock(**{
                 'id': 1
             }),
-            'content': "!vt test",
+            'content': "!bad test",
             'author': self.nonadmin,
         })
 
@@ -428,7 +446,7 @@ class TestBotCallsCommands(unittest.TestCase):
             'server': Mock(**{
                 'id': 1
             }),
-            'content': "!vtdelay 1",
+            'content': "!baddelay 1",
             'author': self.nonadmin,
         })
 
@@ -442,7 +460,7 @@ class TestBotCallsCommands(unittest.TestCase):
             'server': Mock(**{
                 'id': 1
             }),
-            'content': "!vtdelay 1",
+            'content': "!baddelay 1",
             'author': self.admin,
         })
 
@@ -456,7 +474,7 @@ class TestBotCallsCommands(unittest.TestCase):
             'server': Mock(**{
                 'id': 1
             }),
-            'content': "!vtban 1",
+            'content': "!badban 1",
             'author': self.admin,
         })
 
@@ -470,7 +488,7 @@ class TestBotCallsCommands(unittest.TestCase):
             'server': Mock(**{
                 'id': 1
             }),
-            'content': "!vtunban 1",
+            'content': "!badunban 1",
             'author': self.admin,
         })
 
@@ -484,7 +502,7 @@ class TestBotCallsCommands(unittest.TestCase):
             'server': Mock(**{
                 'id': 1
             }),
-            'content': "!vtct",
+            'content': "!badct",
             'author': self.admin,
         })
 
@@ -493,12 +511,26 @@ class TestBotCallsCommands(unittest.TestCase):
 
     @patch('bot.fetch_server_from_api', side_effect=simple_server)
     @patch.object(HelpCommand, 'execute')
-    def test_handle_message__VT_help(self, helpMock, sMock):
+    def test_handle_message__help_backup(self, helpMock, sMock):
         message = Mock(**{
             'server': Mock(**{
                 'id': 1
             }),
             'content': "!vthelp",
+            'author': self.admin,
+        })
+
+        message_to_send = bot.handle_message(message, self.current_time, None)
+        self.assertTrue(helpMock.called)
+
+    @patch('bot.fetch_server_from_api', side_effect=simple_server)
+    @patch.object(HelpCommand, 'execute')
+    def test_handle_message__VT_help(self, helpMock, sMock):
+        message = Mock(**{
+            'server': Mock(**{
+                'id': 1
+            }),
+            'content': "!badhelp",
             'author': self.admin,
         })
 
@@ -512,7 +544,7 @@ class TestBotCallsCommands(unittest.TestCase):
             'server': Mock(**{
                 'id': 1
             }),
-            'content': "!vtalert",
+            'content': "!badalert",
             'author': self.admin,
         })
 
@@ -526,7 +558,7 @@ class TestBotCallsCommands(unittest.TestCase):
             'server': Mock(**{
                 'id': 1
             }),
-            'content': "!vtsilence",
+            'content': "!badsilence",
             'author': self.admin,
         })
 

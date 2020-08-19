@@ -8,4 +8,5 @@ from .addbancommand import AddBanCommand
 from .changebancommand import ChangeBanCommand
 from .removebancommand import RemoveBanCommand
 from .changetimecommand import ChangeTimeCommand
+from .changeprefixcommand import ChangePrefixCommand
 from .nocommand import NoCommand

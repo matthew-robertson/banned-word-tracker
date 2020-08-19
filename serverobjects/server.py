@@ -14,6 +14,7 @@ class DiscordServer:
 		self.server_id = int(server_data['server_id'])
 		self.awake = bool(server_data['awake'])
 		self.timeout_duration_seconds = int(server_data['timeout_duration_seconds'])
+		self.prefix = server_data['prefix']
 		self.banned_words = []
 		for word in server_data['banned_words']:
 			ban = BanInstance(word, self.current_time, self.timeout_duration_seconds, self._session)
@@ -25,6 +26,9 @@ class DiscordServer:
 	def set_timeout(self, new_timeout):
 		return self.update_server_settings({'timeout_duration_seconds': new_timeout})
 
+	def set_prefix(self, new_prefix):
+		return self.update_server_settings({'prefix': new_prefix})
+
 	def update_server_settings(self, updated_params):
 		response = self._session.post(
 			API_BASE_URL + 'v1/servers/' + str(self.server_id), 
@@ -34,6 +38,7 @@ class DiscordServer:
 			jData = json.loads(response.content)
 			self.awake = bool(jData['awake'])
 			self.timeout_duration_seconds = int(jData['timeout_duration_seconds'])
+			self.prefix = jData['prefix']
 		return response.ok
 
 	def ban_new_word(self, new_word):

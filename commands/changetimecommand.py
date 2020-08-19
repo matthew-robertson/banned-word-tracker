@@ -6,7 +6,11 @@ class ChangeTimeCommand(Command):
 		return permissions and permissions.administrator
 
 	def execute(self, current_server, current_time, message, author):
-		parsed_time = parse_time(message[8:])
+		strings = message.lstrip().split(' ', 1)
+		if len(strings) < 2:
+			return "Sorry, I don't understand that formatting. I was expecting something like '!vtct hh:mm:ss'"
+
+		parsed_time = parse_time(strings[1])
 
 		if parsed_time >= 0:
 			update_succeeded = current_server.set_timeout(parsed_time)
