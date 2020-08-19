@@ -6,23 +6,24 @@ import os
 
 from serverobjects.server import DiscordServer
 from utils.time import parse_time, format_time, format_seconds
-from commands import TimerCommand, CooldownCommand, HelpCommand, SilenceCommand, AlertCommand, AddBanCommand, RemoveBanCommand, ChangeBanCommand, ChangeTimeCommand, ListRecordCommand, NoCommand
+from commands import TimerCommand, CooldownCommand, HelpCommand, SilenceCommand, AlertCommand, AddBanCommand, RemoveBanCommand, ChangeBanCommand, ChangeTimeCommand, ChangePrefixCommand, ListRecordCommand, NoCommand
 
 API_BASE_URL = os.environ["API_BASE_URL"]
 
 command_map = defaultdict(
     lambda: NoCommand,
     {
-        '!vtsilence': SilenceCommand,
-        '!vtalert': AlertCommand,
-        '!vtdelay': ChangeTimeCommand,
-        '!vtban': AddBanCommand,
-        '!vtswapban': ChangeBanCommand,
-        '!vtunban': RemoveBanCommand,
-        '!vthelp': HelpCommand,
-        '!vtct': CooldownCommand,
-        '!vtr': ListRecordCommand,
-        '!vt': TimerCommand
+        'silence': SilenceCommand,
+        'alert': AlertCommand,
+        'delay': ChangeTimeCommand,
+        'prefix': ChangePrefixCommand,
+        'ban': AddBanCommand,
+        'swapban': ChangeBanCommand,
+        'unban': RemoveBanCommand,
+        'help': HelpCommand,
+        'ct': CooldownCommand,
+        'r': ListRecordCommand,
+        '': TimerCommand
     })
 
 callout_phrase = (
@@ -69,7 +70,13 @@ def handle_message(message, current_time, session):
     if (hasattr(message.author, 'permissions_in')):
         permissions = message.author.permissions_in(message.channel)
 
-    found_command = command_map[message.content.split(' ')[0]]()
+    found_command = NoCommand()
+    first_word = message.content.split(' ')[0]
+    if first_word.startswith(current_server.prefix):
+        found_command = command_map[first_word[len(current_server.prefix):]]()
+    if first_word.startswith('!vthelp'):
+        found_command = HelpCommand()
+
     if (not found_command.is_command_authorized(permissions)):
         msg_to_send = "Sorry, you don't have permissions for this."
     else:

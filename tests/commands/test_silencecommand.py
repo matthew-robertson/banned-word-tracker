@@ -36,6 +36,7 @@ class TestSilenceCommand(unittest.TestCase):
 			'server_id' : 1,
 			'awake' : True,
 			'timeout_duration_seconds': 1800,
+			'prefix': '!vt',
 			'banned_words': [{
 				'rowid': 1,
 				'server_id': 1,

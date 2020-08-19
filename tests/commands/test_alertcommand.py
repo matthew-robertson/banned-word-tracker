@@ -36,6 +36,7 @@ class TestAlertCommand(unittest.TestCase):
 			'server_id' : 1,
 			'awake' : False,
 			'timeout_duration_seconds': 1800,
+			'prefix': '!vt',
 			'banned_words': [{
 				'rowid': 1,
 				'server_id': 1,
