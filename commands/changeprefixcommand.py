@@ -5,9 +5,11 @@ class ChangePrefixCommand(Command):
 		return permissions and permissions.administrator
 
 	def execute(self, current_server, current_time, message, author):
-		new_prefix = message.lstrip().split(' ')[1]
-		print(new_prefix)
-		print("!!!!!!!!!!!!!")
+		words = message.lstrip().split(' ')
+		if len(words) < 2:
+			return "Sorry, I don't understand that formatting. I was expecting a new prefix between 1 and 10 characters long."
+
+		new_prefix = words[1]
 		if len(new_prefix) > 0 and len(new_prefix) <= 10:
 			update_succeeded = current_server.set_prefix(new_prefix)
 			if not update_succeeded:
