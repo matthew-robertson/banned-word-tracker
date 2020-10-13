@@ -43,9 +43,8 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
 
     def setUp(self):
         self.current_time = datetime.datetime.now()
-        self.infringedString = "@test referenced a forbidden word, setting its counter back to 0.\n"
-        self.infringedString += "I'll wait 30 minutes and 0 seconds before warning you for this word again.\n"
-        self.infringedString += "The server went 30 minutes and 0 seconds without mentioning the forbidden word 'vore'."
+        self.infringedString = "@test referenced the forbidden word 'vore', breaking a streak of 30 minutes and 0 seconds.\n"
+        self.infringedString += "I'll wait 30 minutes and 0 seconds before warning you for this word again."
 
     @patch('bot.fetch_server_from_api', side_effect=simple_server)
     def test_handle_message__different_word(self, sPostMock, bPostMock, fetchMock):
@@ -63,9 +62,9 @@ class TestAwakeNoCooldownBot(unittest.TestCase):
 
         message_to_send = bot.handle_message(message, self.current_time, None)
 
-        infringedString = "@test referenced a forbidden word, setting its counter back to 0.\n"
-        infringedString += "I'll wait 30 minutes and 0 seconds before warning you for this word again.\n"
-        infringedString += "The server went 30 minutes and 0 seconds without mentioning the forbidden word 'bepis'."
+        infringedString = "@test referenced the forbidden word 'bepis', breaking a streak of 30 minutes and 0 seconds.\n"
+        infringedString += "I'll wait 30 minutes and 0 seconds before warning you for this word again."
+
         self.assertEqual(message_to_send, infringedString)
 
     @patch('bot.fetch_server_from_api', side_effect=simple_server)
