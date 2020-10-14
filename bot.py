@@ -26,10 +26,7 @@ command_map = defaultdict(
         '': TimerCommand
     })
 
-callout_phrase = (
-    "{} referenced a forbidden word, setting its counter back to 0.\n"
-    "I'll wait {} before warning you for this word again.\n"
-    "The server went {} without mentioning the forbidden word '{}'.")
+callout_phrase = "{} referenced the forbidden word '{}', breaking a streak of {}."
 
 def fetch_server_from_api(server_id, current_time, session):
     response = session.get(API_BASE_URL + 'v1/servers/' + str(server_id))
@@ -45,19 +42,16 @@ def fetch_server_from_api(server_id, current_time, session):
 def handle_detected_banned_word(current_time, current_server, author, banned_word):
     called_out = current_server.awake and not banned_word.is_cooldown_active
     time_lasted = format_time(current_time, banned_word.infracted_at)
-    timeout_length = format_seconds(current_server.timeout_duration_seconds)
     banned_word.send_infringing_message(current_time, called_out)
     
     if not called_out:
         return ""
-    return callout_phrase.format(author.mention, timeout_length, time_lasted, banned_word.banned_word)
+    return callout_phrase.format(author.mention, banned_word.banned_word, time_lasted)
 
 def get_infringing_bans(banned_words, message, check_words):
     if not check_words:
         return []
-    return filter(
-        lambda ban: ban.check_if_message_infringes(message),
-        banned_words)
+    return [ban for ban in banned_words if ban.check_if_message_infringes(message)]
 
 def handle_message(message, current_time, session):
     if not message.guild or message.author.bot:
@@ -83,10 +77,16 @@ def handle_message(message, current_time, session):
         msg_to_send = found_command.execute(current_server, current_time, message.content, message.author)
 
     infringing_words = get_infringing_bans(current_server.banned_words, message.content, found_command.detect_bans_in_message)
-    banned_word_msg = "\n".join(map(
-        lambda ban: handle_detected_banned_word(current_time, current_server, message.author, ban),
-        infringing_words))
-
+    banned_word_msgs = [handle_detected_banned_word(current_time, current_server, message.author, ban) for ban in infringing_words]
+    banned_word_msgs = [msg for msg in banned_word_msgs if len(msg)]
+    banned_word_msg = "\n".join(banned_word_msgs)
+    if len(banned_word_msgs) > 0:
+        timeout_length = format_seconds(current_server.timeout_duration_seconds)
+        banned_word_msg += "\nI'll wait {} before warning you for ".format(timeout_length)
+        if len(banned_word_msgs) > 2:
+            banned_word_msg += "one of these words again."
+        else:
+            banned_word_msg += "this word again."
     if len(msg_to_send) and len(banned_word_msg):
         msg_to_send += "\n"
     return msg_to_send + banned_word_msg
