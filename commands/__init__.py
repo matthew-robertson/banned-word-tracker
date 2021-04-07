@@ -7,6 +7,7 @@ from .alertcommand import AlertCommand
 from .addbancommand import AddBanCommand
 from .changebancommand import ChangeBanCommand
 from .removebancommand import RemoveBanCommand
+from .removebanwordcommand import RemoveBanWordCommand
 from .changetimecommand import ChangeTimeCommand
 from .changeprefixcommand import ChangePrefixCommand
 from .nocommand import NoCommand
