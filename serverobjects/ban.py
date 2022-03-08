@@ -34,8 +34,8 @@ class BanInstance:
       self.calledout_at = datetime.datetime.strptime(jData['calledout_at'], "%Y-%m-%d %H:%M:%S")
       self.infracted_at = datetime.datetime.strptime(jData['infracted_at'], "%Y-%m-%d %H:%M:%S")
 
-  def send_infringing_message(self, current_time, called_out):
-    requestData = {'ban_id': self.ban_id, 'sent_time': current_time.strftime("%Y-%m-%d %H:%M:%S")}
+  def send_infringing_message(self, current_time, author, called_out):
+    requestData = {'ban_id': self.ban_id, 'author_id': author.id, 'sent_time': current_time.strftime("%Y-%m-%d %H:%M:%S")}
     if called_out:
       requestData['called_out'] = True
 

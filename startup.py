@@ -4,7 +4,7 @@ import subprocess
 import os
 
 print('Hitting discord\'s API to determine how many shards are needed.')
-url = 'https://discordapp.com/api/v6/gateway/bot'
+url = 'https://discordapp.com/api/v9/gateway/bot'
 response = requests.get(url, headers = {'Authorization': 'Bot ' + os.environ["CLIENT_KEY"]})
 
 processes = []
