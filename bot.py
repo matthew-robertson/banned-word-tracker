@@ -43,7 +43,7 @@ def fetch_server_from_api(server_id, current_time, session):
 def handle_detected_banned_word(current_time, current_server, author, banned_word):
     called_out = current_server.awake and not banned_word.is_cooldown_active
     time_lasted = format_time(current_time, banned_word.infracted_at)
-    banned_word.send_infringing_message(current_time, called_out)
+    banned_word.send_infringing_message(current_time, author, called_out)
     
     if not called_out:
         return ""
