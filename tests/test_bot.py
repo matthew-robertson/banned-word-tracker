@@ -354,18 +354,22 @@ class TestBotCallsCommands(unittest.TestCase):
         self.nonadmin = Mock(**{
                 'id': 2,
                 'mention': "@test",
-                'permissions_in.return_value': Mock(**{
-                    'administrator': False
-                    }),
                 'bot': False
+            })
+        self.nonadmin_channel = Mock(**{
+                'permissions_for.return_value': Mock(**{
+                    'administrator': False
+                    })
             })
         self.admin = Mock(**{
                 'id': 2,
                 'mention': "@test",
-                'permissions_in.return_value': Mock(**{
-                    'administrator': True
-                    }),
                 'bot': False
+            })
+        self.admin_channel = Mock(**{
+                'permissions_for.return_value': Mock(**{
+                    'administrator': True
+                    })
             })
 
     @patch('bot.fetch_server_from_api', side_effect=simple_server)
@@ -377,6 +381,7 @@ class TestBotCallsCommands(unittest.TestCase):
             }),
             'content': "!badtest",
             'author': self.nonadmin,
+            'channel': self.nonadmin_channel,
         })
 
         message_to_send = bot.handle_message(message, self.current_time, None)
@@ -391,6 +396,7 @@ class TestBotCallsCommands(unittest.TestCase):
             }),
             'content': "!vt",
             'author': self.nonadmin,
+            'channel': self.nonadmin_channel,
         })
 
         message_to_send = bot.handle_message(message, self.current_time, None)
@@ -405,6 +411,7 @@ class TestBotCallsCommands(unittest.TestCase):
             }),
             'content': "!bad",
             'author': self.nonadmin,
+            'channel': self.nonadmin_channel,
         })
 
         message_to_send = bot.handle_message(message, self.current_time, None)
@@ -419,6 +426,7 @@ class TestBotCallsCommands(unittest.TestCase):
             }),
             'content': "!badr",
             'author': self.nonadmin,
+            'channel': self.nonadmin_channel,
         })
 
         message_to_send = bot.handle_message(message, self.current_time, None)
@@ -433,6 +441,7 @@ class TestBotCallsCommands(unittest.TestCase):
             }),
             'content': "!bad test",
             'author': self.nonadmin,
+            'channel': self.nonadmin_channel,
         })
 
         message_to_send = bot.handle_message(message, self.current_time, None)
@@ -447,6 +456,7 @@ class TestBotCallsCommands(unittest.TestCase):
             }),
             'content': "!baddelay 1",
             'author': self.nonadmin,
+            'channel': self.nonadmin_channel,
         })
 
         message_to_send = bot.handle_message(message, self.current_time, None)
@@ -461,6 +471,7 @@ class TestBotCallsCommands(unittest.TestCase):
             }),
             'content': "!baddelay 1",
             'author': self.admin,
+            'channel': self.admin_channel,
         })
 
         message_to_send = bot.handle_message(message, self.current_time, None)
@@ -475,6 +486,7 @@ class TestBotCallsCommands(unittest.TestCase):
             }),
             'content': "!badban 1",
             'author': self.admin,
+            'channel': self.admin_channel,
         })
 
         message_to_send = bot.handle_message(message, self.current_time, None)
@@ -489,6 +501,7 @@ class TestBotCallsCommands(unittest.TestCase):
             }),
             'content': "!badunban 1",
             'author': self.admin,
+            'channel': self.admin_channel,
         })
 
         message_to_send = bot.handle_message(message, self.current_time, None)
@@ -503,6 +516,7 @@ class TestBotCallsCommands(unittest.TestCase):
             }),
             'content': "!badct",
             'author': self.admin,
+            'channel': self.admin_channel,
         })
 
         message_to_send = bot.handle_message(message, self.current_time, None)
@@ -517,6 +531,7 @@ class TestBotCallsCommands(unittest.TestCase):
             }),
             'content': "!vthelp",
             'author': self.admin,
+            'channel': self.admin_channel,
         })
 
         message_to_send = bot.handle_message(message, self.current_time, None)
@@ -531,6 +546,7 @@ class TestBotCallsCommands(unittest.TestCase):
             }),
             'content': "!badhelp",
             'author': self.admin,
+            'channel': self.admin_channel,
         })
 
         message_to_send = bot.handle_message(message, self.current_time, None)
@@ -545,6 +561,7 @@ class TestBotCallsCommands(unittest.TestCase):
             }),
             'content': "!badalert",
             'author': self.admin,
+            'channel': self.admin_channel,
         })
 
         message_to_send = bot.handle_message(message, self.current_time, None)
@@ -559,6 +576,7 @@ class TestBotCallsCommands(unittest.TestCase):
             }),
             'content': "!badsilence",
             'author': self.admin,
+            'channel': self.admin_channel,
         })
 
         message_to_send = bot.handle_message(message, self.current_time, None)
