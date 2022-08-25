@@ -62,8 +62,8 @@ def handle_message(message, current_time, session):
     current_server = fetch_server_from_api(server_id, current_time, session)
 
     permissions = None
-    if (hasattr(message.author, 'permissions_in')):
-        permissions = message.author.permissions_in(message.channel)
+    if (hasattr(message.channel, 'permissions_for')):
+        permissions = message.channel.permissions_for(message.author)
 
     found_command = NoCommand()
     first_word = message.content.split(' ')[0]
@@ -93,7 +93,9 @@ def handle_message(message, current_time, session):
     return msg_to_send + banned_word_msg
 
 def run_bot(shard_id, shard_count, client_key, session):
-    client = discord.Client(shard_id=shard_id, shard_count=shard_count)
+    intents = discord.Intents.default()
+    intents.message_content = True
+    client = discord.Client(shard_id=shard_id, shard_count=shard_count, intents=intents)
 
     @client.event
     async def on_ready():
